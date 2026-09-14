@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snake</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #0b0b0c; color: #fff; font-family: ui-sans-serif, system-ui, sans-serif; }
+    .wrap { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+    canvas { background: #141416; border: 1px solid #2a2a2e; border-radius: 12px; }
+    p { margin: 0; color: #9a9a9a; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <canvas id="c" width="400" height="400"></canvas>
+    <p>Arrows or WASD. Score: <span id="s">0</span></p>
+  </div>
+  <script>
+    const size = 20, cells = 20;
+    const canvas = document.getElementById("c");
+    const ctx = canvas.getContext("2d");
+    const scoreEl = document.getElementById("s");
+    let snake = [{ x: 8, y: 10 }, { x: 7, y: 10 }];
+    let dir = { x: 1, y: 0 };
+    let pending = dir;
+    let food = { x: 14, y: 10 };
+    let score = 0;
+    let dead = false;
+
+    function placeFood() {
+      do {
+        food = { x: Math.floor(Math.random() * cells), y: Math.floor(Math.random() * cells) };
+      } while (snake.some(p => p.x === food.x && p.y === food.y));
+    }
+
+    window.addEventListener("keydown", e => {
+      const map = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
+      const next = map[e.key];
+      if (!next) return;
+      e.preventDefault();
+      if (next[0] === -dir.x && next[1] === -dir.y) return;
+      pending = { x: next[0], y: next[1] };
+    });
+
+    function tick() {
+      if (dead) return;
+      dir = pending;
+      const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+      if (head.x < 0 || head.y < 0 || head.x >= cells || head.y >= cells || snake.some(p => p.x === head.x && p.y === head.y)) {
+        dead = true;
+        return;
+      }
+      snake.unshift(head);
+      if (head.x === food.x && head.y === food.y) {
+        score += 1;
+        scoreEl.textContent = score;
+        placeFood();
+      } else snake.pop();
+      ctx.fillStyle = "#141416";
+      ctx.fillRect(0, 0, 400, 400);
+      ctx.fillStyle = "#fff";
+      snake.forEach(p => ctx.fillRect(p.x * size + 1, p.y * size + 1, size - 2, size - 2));
+      ctx.fillStyle = "#7d7d7d";
+      ctx.fillRect(food.x * size + 1, food.y * size + 1, size - 2, size - 2);
+    }
+    setInterval(tick, 110);
+    tick();
+  </script>
+</body>
+</html>

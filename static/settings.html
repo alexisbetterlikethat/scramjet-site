@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" id="tab-favicon" href="favicon.png" />
+  <title id="t">Scramjet</title>
+  <link rel="stylesheet" id="global" href="/assets/css/global.css" />
+  <link rel="stylesheet" href="/assets/css/container.css" />
+  <link rel="stylesheet" href="/assets/css/nav.css" />
+  <link rel="stylesheet" href="/assets/css/settings.css" />
+  <script src="/assets/js/homoglyphs.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+  <div class="nav-bar"></div>
+  <div class="main">
+    <div class="settings-container">
+      <div class="settings-card">
+        <h3>About:Blank</h3>
+        <p>
+          Open an about:blank tab. If you set this to automatic, make sure to allow popups in Chrome. No, you won't get ads.
+        </p>
+        <div id="ab-settings">
+          <div id="ab-settings-container">
+            <label class="switch">
+              <input type="checkbox" id="ab-settings-switch" class="slider-checkbox" onchange="toggleAB()" />
+              <span class="slider-round"></span>
+            </label>
+          </div>
+          <button onclick="AB()" class="key-button">Open Popup</button>
+        </div>
+      </div>
+      <div class="settings-card">
+        <h3>Set Panic Key</h3>
+        <p>
+          Quick open another site with one press. Used for redirects when
+          about:blank is opened. For multiple key strokes separate them with a
+          comma. Ex. "A,B,C"
+        </p>
+        <input type="text" id="eventKeyInput" placeholder="Panic Keys (comma separated)" class="key-form" />
+        <input class="key-form" placeholder="Panic Link" type="text" id="linkInput" value />
+        <button class="key-button" value="Save" onclick="saveEventKey()">
+          Save
+        </button>
+      </div>
+      <div class="settings-card">
+        <h3>Tab cloaker</h3>
+        <p>Change the title and icon of the page.</p>
+        <select id="cloak-dropdown">
+          <option value="Classroom">Default</option>
+          <option value="Clever">Clever</option>
+          <option value="Canvas">Canvas</option>
+          <option value="CodeHS">CodeHS</option>
+          <option value="Edpuzzle">Edpuzzle</option>
+          <option value="Google">Google</option>
+          <option value="Google Meet">Google Meet</option>
+          <option value="Classroom">Google Classroom</option>
+          <option value="Drive">Google Drive</option>
+          <option value="Google Docs">Google Docs</option>
+          <option value="Google Slides">Google Slides</option>
+          <option value="Gmail">Gmail</option>
+          <option value="Khan">Khan Academy</option>
+          <option value="Campus">Infinite Campus</option>
+          <option value="IXL">IXL</option>
+          <option value="LinkIt">LinkIt!</option>
+          <option value="Schoology">Schoology</option>
+          <option value="i-Ready Math">i-Ready Math</option>
+          <option value="i-Ready Reading">i-Ready Reading</option>
+          <option value="ClassLink Login">ClassLink Login</option>
+          <option value="Wikipedia">Wikipedia</option>
+          <option value="Britannica">Britannica</option>
+          <option value="Ducksters">Ducksters</option>
+          <option value="Minga">Minga</option>
+          <option value="i-Ready Learning Games">
+            i-Ready Learning Games
+          </option>
+          <option value="NoRedInk Home">NoRedInk Home</option>
+          <option value="Newsela Binder">Newsela Binder</option>
+          <option value="Newsela Assignments">Newsela Assignments</option>
+          <option value="Newsela Home">Newsela Home</option>
+          <option value="PowerSchool Sign In">PowerSchool Sign In</option>
+          <option value="PowerSchool Grades and Attendance">
+            PowerSchool Grades and Attendance
+          </option>
+          <option value="PowerSchool Teacher Comments">
+            PowerSchool Teacher Comments
+          </option>
+          <option value="PowerSchool Standards Grades">
+            PowerSchool Standards Grades
+          </option>
+          <option value="PowerSchool Attendance">
+            PowerSchool Attendance
+          </option>
+          <option value="Nearpod">Nearpod</option>
+          <option value="StudentVUE">StudentVUE</option>
+          <option value="Quizlet Home">Quizlet Home</option>
+          <option value="Google Forms Locked Mode">
+            Google Forms - Locked Mode
+          </option>
+          <option value="DeltaMath">DeltaMath</option>
+          <option value="Kami">Kami</option>
+          <option value="GoGuardian Admin Restricted">
+            GoGuardian Admin Block
+          </option>
+          <option value="GoGuardian Teacher Block">
+            GoGuardian Teacher Block
+          </option>
+          <option value="World History Encyclopedia">
+            World History Encyclopedia
+          </option>
+          <option value="Big Ideas Math">Big Ideas Math</option>
+          <option value="Big Ideas Math Assignment Player">
+            Big Ideas Math Assignment Player
+          </option>
+          <option value="Savvas Realize">Savvas Realize</option>
+          <option value="SmartPass">SmartPass</option>
+          <option value="World Book Online - Super Home">
+            World Book Online (Super Home)
+          </option>
+          <option value="World Book Online - Student">
+            World Book Online (Student)
+          </option>
+          <option value="World Book Online - Timelines">
+            World Book Online (Timelines)
+          </option>
+          <option value="Naviance">Naviance Student</option>
+          <option value="PBS Learning Media">PBS Learning Media</option>
+          <option value="PBS Learning Media Student Home">
+            PBS Learning Media Student Home
+          </option>
+          <option value="Dictionary">Dictionary.com</option>
+          <option value="Thesaurus">Thesaurus.com</option>
+        </select>
+        <input class="key-form" type="text" id="custom-cloak-name" placeholder="Custom tab name (optional)" />
+        <input class="key-form" type="text" id="custom-cloak-icon" placeholder="Custom icon URL (optional)" />
+        <div id="buttonLayer">
+          <button class="key-button" id="cloak-save-btn">Save</button>
+          <button class="key-button" id="cloak-reset-btn">Reset Cloak</button>
+        </div>
+      </div>
+      <div class="settings-card">
+        <h3>Visual Customization</h3>
+        <p>Customize the look and feel of the site</p>
+
+        <label>Theme</label>
+        <select id="theme-dropdown" class="td">
+          <optgroup label="Our Themes">
+            <option value="d">Default</option>
+            <option value="light">Light</option>
+            <option value="oled">Black</option>
+            <option value="sky">Sky</option>
+            <option value="tokyoNight">Tokyo Night</option>
+            <option value="nord">Nord</option>
+            <option value="rosePine">Ros&eacute; Pine</option>
+          </optgroup>
+          <optgroup label="More Themes">
+            <option value="gruvbox">Gruvbox</option>
+            <option value="gruvboxLight">Gruvbox Light</option>
+            <option value="everforest">Everforest</option>
+            <option value="monokai">Monokai</option>
+            <option value="oneDark">One Dark</option>
+            <option value="solarized">Solarized</option>
+            <option value="solarizedLight">Solarized Light</option>
+            <option value="synthwave">Synthwave '84</option>
+          </optgroup>
+          <optgroup label="Catppuccin Themes">
+            <option value="catppuccinMocha">Mocha</option>
+            <option value="catppuccinMacchiato">Macchiato</option>
+            <option value="catppuccinFrappe">Frappe</option>
+            <option value="catppuccinLatte">Latte</option>
+          </optgroup>
+        </select>
+
+        <label>Background</label>
+        <select id="background-dropdown">
+          <option value="default">Default</option>
+          <option value="none">None</option>
+          <option value="custom">Custom</option>
+        </select>
+        <div id="background-custom-row" style="display:none;">
+          <input class="key-form" type="text" id="background-input" placeholder="Enter image URL" />
+          <button class="key-button" id="save-button">Save</button>
+        </div>
+
+        <label>Background Particles</label>
+        <select id="particles-dropdown">
+          <option value="off">Off</option>
+          <option value="on">Stars</option>
+        </select>
+
+        <label>Cursor Effect</label>
+        <select id="pointer-dropdown">
+          <option value="default">Default</option>
+          <option value="rainbow-trail">Rainbow Trail</option>
+          <option value="rainbow-stars">Rainbow Stars</option>
+          <option value="red-circle">Red Circle</option>
+          <option value="white-orbs">White Orbs</option>
+          <option value="blue-orbs">Blue Orbs</option>
+          <option value="the-sims">The Sims</option>
+          <option value="curly-cursor">Curly Cursor</option>
+        </select>
+      </div>
+
+      <div class="settings-card">
+        <h3>Search Engine</h3>
+        <p>Change the search engine when searching.</p>
+        <select title="engine" id="engine" onchange="changeEngine(this)">
+          <option value="Brave">Brave (Default)</option>
+          <option value="Google">Google</option>
+          <option value="Bing">Bing</option>
+          <option value="Qwant">Qwant</option>
+          <option value="Startpage">Startpage</option>
+          <option value="SearchEncrypt">SearchEncrypt</option>
+          <option value="Ecosia">Ecosia</option>
+        </select>
+        <input class="key-form" type="text" id="engine-form" placeholder="Change Search Engine" name="engine" />
+        <button class="key-button" id="engine-save-btn">Save</button>
+      </div>
+      <div class="settings-card">
+        <h3>Proxy</h3>
+        <p>Scramjet is the default. Ultraviolet stays available as a fallback.</p>
+        <select id="pChange">
+          <option value="sj">Scramjet (default)</option>
+          <option value="uv">Ultraviolet</option>
+        </select>
+
+        <div id="transport-row" style="display:none;">
+          <label>Transport</label>
+          <select id="transport-dropdown">
+            <option value="libcurl">Libcurl (default)</option>
+            <option value="epoxy">Epoxy</option>
+          </select>
+
+          <label>Wisp Server</label>
+          <input class="key-form" type="text" id="wisp-input" placeholder="wss://your-server/wisp/ (blank = default)" />
+          <button class="key-button" id="wisp-save-btn">Save</button>
+        </div>
+      </div>
+      <div class="settings-card">
+        <h3>Focus cloak</h3>
+        <p>When you leave this tab, it looks like the cloaked site. Comes back when you return.</p>
+        <label class="switch">
+          <input type="checkbox" id="focus-cloak-switch" class="slider-checkbox" />
+          <span class="slider-round"></span>
+        </label>
+      </div>
+      <div class="settings-card">
+        <h3>Anti-close</h3>
+        <p>Chrome asks before you close or refresh this tab.</p>
+        <label class="switch">
+          <input type="checkbox" id="anti-close-switch" class="slider-checkbox" />
+          <span class="slider-round"></span>
+        </label>
+      </div>
+      <div class="settings-card">
+        <h3>Proxy extensions</h3>
+        <p>Small scripts that run inside proxied pages. Turn on what you want. You can add your own.</p>
+        <div id="extension-list"></div>
+        <input class="key-form" id="ext-name" placeholder="Name" />
+        <input class="key-form" id="ext-site" placeholder="Match (youtube.com or *)" />
+        <textarea class="key-form" id="ext-code" placeholder="JavaScript"></textarea>
+        <button class="key-button" id="ext-add-btn" type="button">Add extension</button>
+      </div>
+      <div class="settings-card">
+        <h3>Save Data Management</h3>
+        <p>Export your saved data on this site and import it on another site.
+          This is useful because this site might be blocked in the future,
+          but you don't want to lose your save data.
+        </p>
+        <p id="warning">Importing a save file will overwrite your current saves!</p>
+        <button class="key-button" value="Export" onclick="exportSaveData();">Export Save</button>
+        <button class="key-button" value="Import" onclick="importSaveData();">Import Save</button>
+      </div>
+      <div class="settings-card">
+        <h3>Information</h3>
+        <p>Scramjet is a free to use "tool" for stuff. Scramjet is based off a tool called Scramjet in order to prevent censorship.</p>
+      </div>
+    </div>
+  </div>
+  <script src="/assets/js/extensions.js"></script>
+  <script src="/assets/js/settings.js"></script>
+</body>
+
+</html>

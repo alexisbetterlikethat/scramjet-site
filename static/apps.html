@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <link rel="shortcut icon" id="tab-favicon" href="favicon.png" />
+  <title id="t">Scramjet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/assets/css/global.css" />
+  <link rel="stylesheet" href="/assets/css/container.css" />
+  <link rel="stylesheet" href="/assets/css/nav.css" />
+  <script src="/assets/js/homoglyphs.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/vendor.js"></script>
+  <script defer src="/assets/js/search.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+  <div class="nav-bar"></div>
+  <div class="input-c">
+    <input type="text" id="search" onkeyup="bar()" placeholder="Search apps" />
+    <select title="Category" id="category" name="category" onchange="category()">
+      <option value="all">All</option>
+      <option value="android">Android emulator</option>
+      <option value="social">Social</option>
+      <option value="stream">Stream</option>
+      <option value="message">Message</option>
+      <option value="media">TV & movies</option>
+      <option value="game">Game sites</option>
+      <option value="cloud">Cloud gaming</option>
+      <option value="tool">Tools</option>
+      <option value="ai">AI</option>
+      <option value="emu">Emulator</option>
+      <option value="mail">Mail</option>
+    </select>
+  </div>
+  <div id="apps-container">
+    <div class="pinned"></div>
+    <div class="apps"></div>
+  </div>
+  <script src="assets/js/launcher.js"></script>
+  <script src="/assets/scramjet/scramjet.all.js"></script>
+  <script src="/assets/scramjet/scramjet.config.js"></script>
+</body>
+
+</html>

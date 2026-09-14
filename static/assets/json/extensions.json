@@ -1,0 +1,23 @@
+[
+  {
+    "id": "hide-ads",
+    "name": "Hide common ads",
+    "description": "Removes a few obvious ad slots on proxied pages.",
+    "site": "*",
+    "code": "(function(){try{document.querySelectorAll('iframe[src*=\"doubleclick\"],iframe[src*=\"googlesyndication\"],ins.adsbygoogle,[id*=\"google_ads\"]').forEach(function(el){el.remove();});}catch(e){}})();"
+  },
+  {
+    "id": "cookie-banners",
+    "name": "Hide cookie banners",
+    "description": "Tries to dismiss or hide cookie consent popups.",
+    "site": "*",
+    "code": "(function(){try{document.querySelectorAll('[id*=\"cookie\" i],[class*=\"cookie\" i],[id*=\"consent\" i],[class*=\"consent\" i]').forEach(function(el){var t=(el.textContent||'').toLowerCase();if(t.indexOf('cookie')>-1||t.indexOf('consent')>-1)el.style.display='none';});}catch(e){}})();"
+  },
+  {
+    "id": "dark-page",
+    "name": "Dark page",
+    "description": "Inverts very bright pages so they are easier to look at.",
+    "site": "*",
+    "code": "(function(){try{var s=document.createElement('style');s.textContent='html{filter:invert(1) hue-rotate(180deg);}img,video,canvas,svg,picture{filter:invert(1) hue-rotate(180deg);}';document.documentElement.appendChild(s);}catch(e){}})();"
+  }
+]

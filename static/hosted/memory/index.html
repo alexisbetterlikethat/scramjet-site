@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Memory</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #0b0b0c; color: #fff; font-family: ui-sans-serif, system-ui, sans-serif; }
+    .wrap { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(4, 72px); gap: 10px; }
+    button { width: 72px; height: 72px; border: 1px solid #2a2a2e; border-radius: 12px; background: #141416; color: #fff; font-size: 22px; cursor: pointer; }
+    button.matched { opacity: 0.35; }
+    p { margin: 0; color: #9a9a9a; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="grid" id="g"></div>
+    <p>Pairs: <span id="s">0</span> / 8</p>
+  </div>
+  <script>
+    const symbols = ["A","B","C","D","E","F","G","H"];
+    const deck = [...symbols, ...symbols].sort(() => Math.random() - 0.5);
+    const grid = document.getElementById("g");
+    let open = [];
+    let pairs = 0;
+    let lock = false;
+    deck.forEach((sym, i) => {
+      const btn = document.createElement("button");
+      btn.dataset.i = i;
+      btn.addEventListener("click", () => {
+        if (lock || btn.classList.contains("matched") || open.includes(btn)) return;
+        btn.textContent = sym;
+        open.push(btn);
+        if (open.length < 2) return;
+        lock = true;
+        const [a, b] = open;
+        if (deck[a.dataset.i] === deck[b.dataset.i]) {
+          a.classList.add("matched"); b.classList.add("matched");
+          pairs += 1;
+          document.getElementById("s").textContent = pairs;
+          open = []; lock = false;
+        } else {
+          setTimeout(() => { a.textContent = ""; b.textContent = ""; open = []; lock = false; }, 650);
+        }
+      });
+      grid.appendChild(btn);
+    });
+  </script>
+</body>
+</html>
