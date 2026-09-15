@@ -176,6 +176,12 @@
     "categories": ["all", "game"]
   },
   {
+    "name": "Crazy Games",
+    "link": "https://www.crazygames.com/",
+    "image": "/assets/media/icons/crazy.webp",
+    "categories": ["all", "game"]
+  },
+  {
     "name": "Premier League",
     "link": "https://premierleague.com",
     "image": "/assets/media/icons/pl.webp",
