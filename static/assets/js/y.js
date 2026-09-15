@@ -78,6 +78,35 @@ function ensureVisionModel() {
   syncModelUi();
 }
 
+function typesetMath(el) {
+  const run = () => {
+    if (!el || typeof renderMathInElement !== "function") return;
+    renderMathInElement(el, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "\\[", right: "\\]", display: true },
+        { left: "\\(", right: "\\)", display: false },
+        { left: "$", right: "$", display: false },
+      ],
+      throwOnError: false,
+      ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
+    });
+  };
+  if (typeof renderMathInElement === "function") {
+    run();
+    return;
+  }
+  const started = Date.now();
+  const timer = setInterval(() => {
+    if (typeof renderMathInElement === "function") {
+      clearInterval(timer);
+      run();
+    } else if (Date.now() - started > 8000) {
+      clearInterval(timer);
+    }
+  }, 40);
+}
+
 function emptyState() {
   thread.innerHTML = `
     <div class="y-col">
@@ -107,6 +136,7 @@ function addRow(role, text, image, thinking) {
     body.innerHTML = `<span class="y-dots"><i></i><i></i><i></i></span> Thinking`;
   } else {
     body.textContent = text;
+    typesetMath(body);
   }
   bubble.appendChild(body);
   row.appendChild(bubble);
@@ -341,6 +371,7 @@ form.addEventListener("submit", async event => {
     }
     reply.body.querySelector(".y-caret")?.remove();
     if (!full) reply.body.textContent = "I could not get a reply.";
+    typesetMath(reply.body);
     messages.push({ role: "assistant", content: full || "I could not get a reply." });
     saveMessages();
   } catch (error) {

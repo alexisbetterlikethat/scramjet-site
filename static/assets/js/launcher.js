@@ -1,5 +1,6 @@
-const isGamesPage = window.location.pathname === getPageRoute("games");
-const isAppsPage = window.location.pathname === getPageRoute("apps");
+const pagePath = (window.location.pathname.replace(/\/$/, "") || "/").toLowerCase();
+const isGamesPage = pagePath === getPageRoute("games");
+const isAppsPage = pagePath === getPageRoute("apps");
 
 function getStorageKey(baseKey) {
   if (isGamesPage) return `G${baseKey}`;
@@ -69,7 +70,7 @@ function saveUrlToSession(url) {
   sessionStorage.setItem("GoUrl", url);
 }
 
-function handleAppClick(app) {
+async function handleAppClick(app) {
   if (app.say) {
     alert(app.say);
   }
@@ -82,23 +83,31 @@ function handleAppClick(app) {
 
   const proxy = app.proxy;
 
-  // isInTabMode is declared in main.js
-  if (app.local) {
+  try {
+    if (app.local) {
+      saveUrlToSession(selectedUrl);
+      window.location.href = isInTabMode ? selectedUrl : "/tabs";
+    } else if (app.local2) {
+      saveUrlToSession(selectedUrl);
+      window.location.href = selectedUrl;
+    } else if (app.blank) {
+      if (typeof blank === "function") await blank(selectedUrl, proxy);
+    } else if (app.now) {
+      if (typeof blank === "function") await blank(selectedUrl, proxy);
+      if (isInTabMode) window.location.href = selectedUrl;
+    } else if (app.custom) {
+      createCustomApp();
+    } else if (typeof go === "function") {
+      await go(selectedUrl, proxy);
+      if (isInTabMode && typeof blank === "function") await blank(selectedUrl, proxy);
+    } else {
+      saveUrlToSession(selectedUrl);
+      window.location.href = "/tabs";
+    }
+  } catch (error) {
+    console.error(error);
     saveUrlToSession(selectedUrl);
-    window.location.href = isInTabMode ? selectedUrl : "tabs";
-  } else if (app.local2) {
-    saveUrlToSession(selectedUrl);
-    window.location.href = selectedUrl;
-  } else if (app.blank) {
-    blank(selectedUrl, proxy);
-  } else if (app.now) {
-    blank(selectedUrl, proxy);
-    if (isInTabMode) window.location.href = selectedUrl;
-  } else if (app.custom) {
-    createCustomApp();
-  } else {
-    go(selectedUrl, proxy);
-    if (isInTabMode) blank(selectedUrl, proxy);
+    window.location.href = "/tabs";
   }
 
   return false;
@@ -311,7 +320,11 @@ function renderAppCard(app, appIndex, isCustom = false) {
   columnDiv.setAttribute("data-app-index", appIndex);
 
   const link = document.createElement("a");
-  link.onclick = () => handleAppClick(app);
+  link.href = "#";
+  link.onclick = event => {
+    event.preventDefault();
+    handleAppClick(app);
+  };
 
   const image = document.createElement("img");
   image.width = 145;

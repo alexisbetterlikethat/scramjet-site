@@ -163,11 +163,11 @@ async function navigate(value, path, proxyOverride) {
 }
 
 function go(value, proxyOverride) {
-  navigate(value, "/tabs", proxyOverride);
+  return navigate(value, "/tabs", proxyOverride);
 }
 
 function blank(value, proxyOverride) {
-  navigate(value, "", proxyOverride);
+  return navigate(value, "", proxyOverride);
 }
 
 function isValidUrl(val = "") {

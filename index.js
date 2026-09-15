@@ -527,7 +527,8 @@ async function sendHtml(res, file) {
 }
 
 routes.forEach(route => {
-  app.get(route.path, generalLimiter, (req, res) => {
+  const paths = route.path === "/" ? ["/"] : [route.path, `${route.path}/`];
+  app.get(paths, generalLimiter, (req, res) => {
     if (gamesRedirect(req, res)) return;
     sendHtml(res, route.file).catch(err => {
       console.error(err);

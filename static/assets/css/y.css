@@ -67,6 +67,19 @@ body.y-page {
   overflow-wrap: anywhere;
 }
 
+.y-bubble .katex {
+  font-size: 1.05em;
+  color: inherit;
+}
+
+.y-bubble .katex-display {
+  display: block;
+  margin: 0.6em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: normal;
+}
+
 .y-row.y-user .y-bubble {
   background: #fff;
   color: #000;
