@@ -97,9 +97,10 @@ document.addEventListener("DOMContentLoaded", () => {
         <a class="icon brand" href="/./"><span class="brand-name">Scramjet</span></a>
       </div>
       <div class="nav-bar-right">
-        <a class="navbar-link${path === gamesPath ? " is-active" : ""}" href="${gamesHref}">${homoglyph("Games")}</a>
-        <a class="navbar-link${path === appsPath ? " is-active" : ""}" href="${appsHref}">${homoglyph("Apps")}</a>
-        <a class="navbar-link${path === "/settings" ? " is-active" : ""}" href="/./settings">${homoglyph("Settings")}</a>
+        <a class="navbar-link${path === gamesPath ? " is-active" : ""}" href="${gamesHref}"><i class="fa-solid fa-gamepad"></i><span>${homoglyph("Games")}</span></a>
+        <a class="navbar-link${path === appsPath ? " is-active" : ""}" href="${appsHref}"><i class="fa-solid fa-table-cells"></i><span>${homoglyph("Apps")}</span></a>
+        <a class="navbar-link${path === "/y" ? " is-active" : ""}" href="/./y"><i class="fa-solid fa-wand-magic-sparkles"></i><span>${homoglyph("AI")}</span></a>
+        <a class="navbar-link${path === "/settings" ? " is-active" : ""}" href="/./settings"><i class="fa-solid fa-gear"></i><span>${homoglyph("Settings")}</span></a>
       </div>`;
     nav.innerHTML = html;
   }

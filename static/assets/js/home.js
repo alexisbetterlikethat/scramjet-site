@@ -107,7 +107,7 @@ const QUICK_APPS = [
   { name: "TikTok", url: "https://tiktok.com" },
   { name: "Reddit", url: "https://reddit.com" },
   { name: "X", url: "https://x.com" },
-  { name: "Duck.ai", url: "https://duck.ai" },
+  { name: "AI", href: "/y", local: true },
   { name: "Games", href: getPageRoute("games") },
 ];
 
@@ -118,7 +118,7 @@ if (quickApps) {
     button.className = "quick-app";
     button.textContent = homoglyph(app.name);
     if (app.href) {
-      button.href = resolveGamesUrl(app.href);
+      button.href = app.local ? app.href : resolveGamesUrl(app.href);
     } else {
       button.type = "button";
       button.addEventListener("click", () => {

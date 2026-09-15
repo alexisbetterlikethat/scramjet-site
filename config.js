@@ -19,6 +19,8 @@ const config = {
   // Hide Ultraviolet in Settings and skip loading it in the service worker.
   scramjetOnly: false,
 
+  // Chat at /y reads process.env.AIKEY (OpenRouter). Never put the key in client JS.
+
   proxyRateLimit: {
     windowMs: 60 * 1000,
     max: 300,
@@ -36,5 +38,6 @@ const config = {
     apps: "/a",
   },
 };
+
 
 export default config;

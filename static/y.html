@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" id="tab-favicon" href="favicon.png" />
+  <title id="t">AI</title>
+  <link rel="stylesheet" href="/assets/css/global.css" />
+  <link rel="stylesheet" href="/assets/css/nav.css" />
+  <link rel="stylesheet" href="/assets/css/y.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="/__runtime.js"></script>
+  <script src="/assets/js/runtime-client.js"></script>
+  <script src="/assets/js/homoglyphs.js"></script>
+  <script src="/assets/js/main.js"></script>
+</head>
+<body class="y-page">
+  <div class="nav-bar"></div>
+  <main class="y-main">
+    <section class="y-thread" id="y-thread"></section>
+    <form class="y-dock" id="y-form">
+      <div class="y-composer">
+        <textarea id="y-input" rows="1" placeholder="How can I help?"></textarea>
+        <div class="y-tools">
+          <div class="y-picker" id="y-picker">
+            <button class="y-picker-btn" id="y-picker-btn" type="button">
+              <i class="fa-solid fa-microchip"></i>
+              <span id="y-picker-name">Model</span>
+              <span class="y-picker-meta" id="y-picker-meta"></span>
+              <i class="fa-solid fa-chevron-up"></i>
+            </button>
+            <div class="y-picker-menu" id="y-picker-menu" hidden></div>
+          </div>
+          <label class="y-attach" id="y-attach-wrap" hidden>
+            <input id="y-image" type="file" accept="image/*" />
+            <i class="fa-regular fa-image"></i>
+            <span id="y-image-name">Image</span>
+          </label>
+          <button class="y-send" type="submit" id="y-send" aria-label="Send">
+            <i class="fa-solid fa-arrow-up"></i>
+          </button>
+        </div>
+      </div>
+    </form>
+  </main>
+  <script src="/assets/js/y.js"></script>
+</body>
+</html>

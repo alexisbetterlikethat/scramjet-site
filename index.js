@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { existsSync } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import http from "node:http";
@@ -12,6 +13,7 @@ import rateLimit from "express-rate-limit";
 import mime from "mime";
 import config from "./config.js";
 import { injectEduSeo } from "./edu-seo-snippet.js";
+import { isVulgar, listChatModels, openRouterKey, sanitizeMessages, SYSTEM_PROMPT } from "./openrouter.js";
 import { clientBootstrap, isFramedPath, isProxyPath, resolveRuntime } from "./runtime.js";
 
 console.log(chalk.yellow("Starting server..."));
@@ -132,6 +134,86 @@ app.get("/gh-games/:path(*)", ghGamesLimiter, async (req, res, next) => {
 }
 
 app.use(cookieParser());
+
+const chatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests, please try again later." },
+});
+
+app.get("/api/y/models", generalLimiter, async (_req, res) => {
+  try {
+    res.json({ models: await listChatModels() });
+  } catch {
+    res.status(502).json({ error: "Could not load models." });
+  }
+});
+
+app.post("/api/y/chat", chatLimiter, express.json({ limit: "3mb" }), async (req, res) => {
+  const key = openRouterKey();
+  if (!key) return res.status(503).json({ error: "Chat is not available right now." });
+
+  try {
+    const models = await listChatModels();
+    const chosen = models.find(model => model.id === req.body?.model) || models[0];
+    if (!chosen) return res.status(502).json({ error: "No chat models are available." });
+
+    const messages = sanitizeMessages(req.body?.messages, chosen.images);
+    if (!messages.some(msg => msg.role === "user")) {
+      return res.status(400).json({ error: "Write a message first." });
+    }
+
+    const refuse = "I can't help with that wording. Ask the homework or general question without vulgar or sexual language and I'll help.";
+    const payload = isVulgar(messages)
+      ? null
+      : {
+          model: chosen.id,
+          stream: true,
+          messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+        };
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    if (!payload) {
+      res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: refuse } }] })}\n\n`);
+      res.write("data: [DONE]\n\n");
+      return res.end();
+    }
+
+    const upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://overflowispeak.lol",
+        "X-Title": "Scramjet",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!upstream.ok || !upstream.body) {
+      res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: "The model did not answer. Try another one." } }] })}\n\n`);
+      res.write("data: [DONE]\n\n");
+      return res.end();
+    }
+
+    const reader = upstream.body.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(value);
+    }
+    res.end();
+  } catch {
+    if (res.headersSent) return res.end();
+    res.status(502).json({ error: "Could not reach the model." });
+  }
+});
+
 app.use(express.json({ limit: "32kb" }));
 app.use(express.urlencoded({ extended: true, limit: "32kb" }));
 
@@ -384,6 +466,7 @@ function gamesRedirect(req, res) {
 }
 
 const routes = [
+  { path: "/y", file: "y.html" },
   { path: "/settings", file: "settings.html" },
   { path: "/tabs", file: "tabs.html" },
   { path: "/", file: "index.html" },
@@ -395,7 +478,10 @@ if (!runtime.disableGamesOnMainHost) {
 }
 
 async function sendHtml(res, file) {
-  const html = injectEduSeo(await readFile(path.join(SERVE_DIR, file), "utf8"));
+  const fromDist = path.join(SERVE_DIR, file);
+  const fromStatic = path.join(STATIC_DIR, file);
+  const htmlPath = existsSync(fromDist) ? fromDist : fromStatic;
+  const html = injectEduSeo(await readFile(htmlPath, "utf8"));
   res.type("html").send(html);
 }
 
