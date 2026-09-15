@@ -48,7 +48,8 @@ async function getActiveExtensions(url) {
 function injectExtensionsIntoFrame(iframe, url) {
   const doc = iframe?.contentDocument;
   if (!doc?.body) return;
-  if (!String(url || "").includes("/uv/")) return;
+  const proxyPrefix = getPaths().uv;
+  if (!String(url || "").includes(proxyPrefix)) return;
   if (doc.documentElement.dataset.sjExt === "1") return;
   doc.documentElement.dataset.sjExt = "1";
   getActiveExtensions(url).then(list => {

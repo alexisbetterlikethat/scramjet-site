@@ -118,7 +118,7 @@ if (quickApps) {
     button.className = "quick-app";
     button.textContent = homoglyph(app.name);
     if (app.href) {
-      button.href = app.href;
+      button.href = resolveGamesUrl(app.href);
     } else {
       button.type = "button";
       button.addEventListener("click", () => {

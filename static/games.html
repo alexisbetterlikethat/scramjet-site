@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="/assets/css/global.css" />
   <link rel="stylesheet" href="/assets/css/container.css" />
   <link rel="stylesheet" href="/assets/css/nav.css" />
+  <script src="/__runtime.js"></script>
+  <script src="/assets/js/runtime-client.js"></script>
   <script src="/assets/js/homoglyphs.js"></script>
   <script src="/assets/js/main.js"></script>
   <script src="/assets/js/vendor.js"></script>
@@ -21,6 +23,10 @@
 <body>
   <div class="nav-bar"></div>
   <div class="input-c">
+    <div class="games-copy">
+      <h1>Games</h1>
+      <p>Popular stuff first. Search if you want something else.</p>
+    </div>
     <input type="text" id="search" onkeyup="bar()" placeholder="Search games" />
     <select id="category" name="category" onchange="category()">
       <option value="all">All</option>
@@ -36,6 +42,9 @@
   </div>
   <div id="apps-container">
     <div class="pinned"></div>
+    <h2 class="games-section" id="popular-heading">Popular</h2>
+    <div class="featured"></div>
+    <h2 class="games-section">All</h2>
     <div class="apps"></div>
   </div>
   <script src="/assets/js/launcher.js"></script>

@@ -15,12 +15,54 @@ function setInStorage(baseKey, value) {
   localStorage.setItem(getStorageKey(baseKey), value);
 }
 
-function createSpanElements(text) {
-  return text.split("").map(char => {
-    const span = document.createElement("span");
-    span.textContent = char;
-    return span;
-  });
+const POPULAR_GAMES = [
+  "slope",
+  "1v1.lol",
+  "1v1 lol",
+  "cookie clicker",
+  "retro bowl",
+  "subway surfers",
+  "minecraft",
+  "geometry dash",
+  "friday night funkin",
+  "smash karts",
+  "shell shockers",
+  "krunker",
+  "run 3",
+  "2048",
+  "crossy road",
+  "flappy bird",
+  "among us",
+  "roblox",
+  "bitlife",
+  "paper.io",
+  "hole.io",
+  "drift boss",
+  "stickman hook",
+  "basket random",
+  "soccer random",
+  "volley random",
+  "idle breakout",
+  "tunnel rush",
+  "ovo",
+  "vex 7",
+  "vex 6",
+  "vex 5",
+  "moto x3m",
+  "getaway shootout",
+  "snow rider",
+  "temple run",
+  "super mario 64",
+  "bloons",
+  "duck life",
+  "snake",
+  "breakout",
+];
+
+function popularityRank(name = "") {
+  const n = name.toLowerCase();
+  const index = POPULAR_GAMES.findIndex(key => n.includes(key));
+  return index === -1 ? 1000 : index;
 }
 
 function saveUrlToSession(url) {
@@ -54,8 +96,6 @@ function handleAppClick(app) {
     if (isInTabMode) window.location.href = selectedUrl;
   } else if (app.custom) {
     createCustomApp();
-  } else if (app.comments) {
-    openComments();
   } else {
     go(selectedUrl, proxy);
     if (isInTabMode) blank(selectedUrl, proxy);
@@ -153,13 +193,13 @@ function createCustomApp() {
     hint: "Saved in this browser only. Use a direct https link.",
     submitLabel: "Add",
     fields: [
-      { name: "title", placeholder: "Title", required: true, maxLength: 80 },
+      { name: "entryName", placeholder: "Title", required: true, maxLength: 80 },
       { name: "link", placeholder: "https://example.com/game", required: true, type: "url", maxLength: 500 },
       { name: "image", placeholder: "Cover image URL (optional)", type: "url", maxLength: 500 },
     ],
     onSubmit: data => {
       const customApp = {
-        name: `[Custom] ${data.title.trim()}`,
+        name: `[Custom] ${data.entryName.trim()}`,
         link: data.link.trim(),
         image: data.image?.trim() || "/assets/media/icons/custom.webp",
         custom: false,
@@ -170,100 +210,6 @@ function createCustomApp() {
       closeSiteModal();
     },
   });
-}
-
-function getComments() {
-  try {
-    return JSON.parse(getFromStorage("comments") || "[]");
-  } catch {
-    return [];
-  }
-}
-
-function saveComments(comments) {
-  setInStorage("comments", JSON.stringify(comments.slice(0, 100)));
-}
-
-function openComments() {
-  closeSiteModal();
-
-  const overlay = document.createElement("div");
-  overlay.id = "site-modal";
-  overlay.className = "site-modal";
-  overlay.addEventListener("click", event => {
-    if (event.target === overlay) closeSiteModal();
-  });
-
-  const panel = document.createElement("div");
-  panel.className = "site-modal-panel comments-panel";
-  panel.innerHTML = `<h3>Comments</h3><p class="site-modal-hint">Local notes on this device. Nothing is sent anywhere.</p>`;
-
-  const list = document.createElement("div");
-  list.className = "comment-list";
-
-  const renderList = () => {
-    const comments = getComments();
-    list.replaceChildren();
-    if (!comments.length) {
-      const empty = document.createElement("p");
-      empty.className = "site-modal-hint";
-      empty.textContent = "No comments yet.";
-      list.appendChild(empty);
-      return;
-    }
-    for (const [index, comment] of comments.entries()) {
-      const item = document.createElement("article");
-      item.className = "comment-item";
-      const meta = document.createElement("header");
-      const name = document.createElement("strong");
-      name.textContent = comment.name;
-      const time = document.createElement("time");
-      time.textContent = new Date(comment.at).toLocaleString();
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.textContent = "Delete";
-      remove.addEventListener("click", () => {
-        const next = getComments();
-        next.splice(index, 1);
-        saveComments(next);
-        renderList();
-      });
-      meta.append(name, time, remove);
-      const body = document.createElement("p");
-      body.textContent = comment.text;
-      item.append(meta, body);
-      list.appendChild(item);
-    }
-  };
-
-  const form = document.createElement("form");
-  form.innerHTML = `
-    <input name="name" maxlength="40" placeholder="Name" required />
-    <textarea name="text" maxlength="500" placeholder="Comment" required></textarea>
-    <div class="site-modal-actions">
-      <button type="button" class="comment-close">Close</button>
-      <button type="submit">Post</button>
-    </div>
-  `;
-  form.querySelector(".comment-close").addEventListener("click", closeSiteModal);
-  form.addEventListener("submit", event => {
-    event.preventDefault();
-    const data = Object.fromEntries(new FormData(form).entries());
-    const comments = getComments();
-    comments.unshift({
-      name: data.name.trim(),
-      text: data.text.trim(),
-      at: Date.now(),
-    });
-    saveComments(comments);
-    form.reset();
-    renderList();
-  });
-
-  renderList();
-  panel.append(list, form);
-  overlay.appendChild(panel);
-  document.body.appendChild(overlay);
 }
 
 function getPinnedApps() {
@@ -367,8 +313,14 @@ function renderAppCard(app, appIndex, isCustom = false) {
   }
 
   const paragraph = document.createElement("p");
-  for (const span of createSpanElements(app.name)) {
-    paragraph.appendChild(span);
+  paragraph.textContent = app.name;
+
+  if (app.popular) {
+    columnDiv.classList.add("is-popular");
+    const tag = document.createElement("span");
+    tag.className = "popular-tag";
+    tag.textContent = "Popular";
+    columnDiv.appendChild(tag);
   }
 
   if (app.error) {
@@ -386,7 +338,7 @@ function renderAppCard(app, appIndex, isCustom = false) {
   link.appendChild(paragraph);
   columnDiv.appendChild(link);
 
-  if (appIndex !== 0 && appIndex !== 1) {
+  if (!isCustom && !app.custom) {
     columnDiv.appendChild(createPinButton(appIndex));
   }
 
@@ -440,20 +392,33 @@ function loadAppsFromJson() {
       const nonPinnedContainer = document.querySelector(".apps");
       const pinnedContainer = document.querySelector(".pinned");
       const pinnedList = getPinnedApps();
+      const featuredContainer = document.querySelector(".featured");
 
-      const appsContainer = document.getElementById("apps-container");
-      if (appsContainer) {
-        appsContainer.appendChild(pinnedContainer);
-        appsContainer.appendChild(nonPinnedContainer);
+      const specialCards = [];
+      while (appsList[0]?.custom) specialCards.push(appsList.shift());
+      appsList = appsList.filter(app => !app.comments);
+
+      if (isGamesPage) {
+        appsList.sort((a, b) => {
+          const rank = popularityRank(a.name) - popularityRank(b.name);
+          return rank !== 0 ? rank : a.name.localeCompare(b.name);
+        });
+      } else {
+        appsList.sort((a, b) => {
+          if (a.name.startsWith("[Custom]")) return -1;
+          if (b.name.startsWith("[Custom]")) return 1;
+          return a.name.localeCompare(b.name);
+        });
       }
 
-      const specialCards = appsList.splice(0, 2);
+      const featured = isGamesPage ? appsList.filter(app => popularityRank(app.name) < 1000).slice(0, 14) : [];
+      const featuredSet = new Set(featured);
 
-      appsList.sort((a, b) => {
-        if (a.name.startsWith("[Custom]")) return -1;
-        if (b.name.startsWith("[Custom]")) return 1;
-        return a.name.localeCompare(b.name);
-      });
+      if (featuredContainer) {
+        const heading = document.getElementById("popular-heading");
+        if (heading) heading.style.display = featured.length ? "" : "none";
+        featuredContainer.style.display = featured.length ? "" : "none";
+      }
 
       appsList.unshift(...specialCards);
 
@@ -461,11 +426,14 @@ function loadAppsFromJson() {
 
       appsList.forEach(app => {
         applyAppFlags(app);
+        if (featuredSet.has(app)) app.popular = true;
 
         const card = renderAppCard(app, appIndex);
 
-        if (appIndex === 0 || appIndex === 1) {
+        if (app.custom) {
           pinnedContainer.appendChild(card);
+        } else if (featuredSet.has(app) && featuredContainer) {
+          featuredContainer.appendChild(card);
         } else if (pinnedList != null && isAppPinned(appIndex, pinnedList)) {
           pinnedContainer.appendChild(card);
         } else {

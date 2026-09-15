@@ -8,13 +8,6 @@
     "custom": "true"
   },
   {
-    "name": "Comments",
-    "categories": [
-      "all"
-    ],
-    "comments": true
-  },
-  {
     "name": "Snake (Hosted)",
     "link": "/hosted/snake/",
     "categories": [

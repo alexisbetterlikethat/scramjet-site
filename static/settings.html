@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="/assets/css/container.css" />
   <link rel="stylesheet" href="/assets/css/nav.css" />
   <link rel="stylesheet" href="/assets/css/settings.css" />
+  <script src="/__runtime.js"></script>
+  <script src="/assets/js/runtime-client.js"></script>
   <script src="/assets/js/homoglyphs.js"></script>
   <script src="/assets/js/main.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -224,9 +226,10 @@
       </div>
       <div class="settings-card">
         <h3>Proxy</h3>
-        <p>Scramjet is the default. Ultraviolet stays available as a fallback.</p>
+        <p>Scramjet is the main one. Scrambled Eggs is a lighter beta. Ultraviolet is the old fallback.</p>
         <select id="pChange">
           <option value="sj">Scramjet (default)</option>
+          <option value="eggs">Scrambled Eggs (beta)</option>
           <option value="uv">Ultraviolet</option>
         </select>
 
@@ -238,7 +241,7 @@
           </select>
 
           <label>Wisp Server</label>
-          <input class="key-form" type="text" id="wisp-input" placeholder="wss://your-server/wisp/ (blank = default)" />
+          <input class="key-form" type="text" id="wisp-input" placeholder="Custom Wisp URL (blank = default)" />
           <button class="key-button" id="wisp-save-btn">Save</button>
         </div>
       </div>

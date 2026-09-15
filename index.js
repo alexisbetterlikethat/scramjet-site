@@ -12,6 +12,7 @@ import rateLimit from "express-rate-limit";
 import mime from "mime";
 import config from "./config.js";
 import { injectEduSeo } from "./edu-seo-snippet.js";
+import { clientBootstrap, isFramedPath, isProxyPath, resolveRuntime } from "./runtime.js";
 
 console.log(chalk.yellow("Starting server..."));
 
@@ -25,11 +26,21 @@ const VENDOR_MAP_PATH = path.join(DIST_DIR, ".runtime", "vendor-map.cjs");
 const vendorMap = existsSync(VENDOR_MAP_PATH) ? require(VENDOR_MAP_PATH) : null;
 
 const SERVE_DIR = vendorMap ? DIST_DIR : STATIC_DIR;
+const runtime = resolveRuntime(vendorMap);
+
 console.log(chalk.blue(`Serving from ${path.relative(__dirname, SERVE_DIR)}/`));
 if (vendorMap) {
-  console.log(chalk.blue(`Build ${vendorMap.build}, proxy scope ${vendorMap.scopes.uv}, scramjet ${vendorMap.scopes.scramjet}`));
+  console.log(
+    chalk.blue(
+      `Build ${vendorMap.build} | scope ${runtime.paths.uv} | scramjet ${runtime.paths.scramjet} | eggs ${runtime.paths.eggs} | wisp ${runtime.paths.wisp}`,
+    ),
+  );
 } else if (existsSync(DIST_DIR)) {
   console.log(chalk.yellow("dist/ exists but has no .runtime/vendor-map.cjs, run `pnpm build`. Falling back to static/."));
+}
+
+if (config.requireBuild && !vendorMap) {
+  console.log(chalk.red("WARNING: No production build detected. Run `pnpm build` before deploying."));
 }
 
 const server = http.createServer();
@@ -56,6 +67,13 @@ const ghGamesLimiter = rateLimit({
   message: "Too many requests, please try again later.",
 });
 
+const proxyLimiter = rateLimit({
+  ...config.proxyRateLimit,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: "Too many requests, please try again later.",
+});
+
 if (config.challenge !== false) {
   console.log(chalk.green("Password protection is enabled."));
   app.use(basicAuth({ users: config.users, challenge: true }));
@@ -69,6 +87,7 @@ const ghGamesBases = {
 };
 const noMimeExts = new Set([".unityweb"]);
 
+if (!runtime.disableGamesOnMainHost) {
 app.get("/gh-games/:path(*)", ghGamesLimiter, async (req, res, next) => {
   try {
     const reqPath = "/gh-games/" + req.params.path;
@@ -110,6 +129,7 @@ app.get("/gh-games/:path(*)", ghGamesLimiter, async (req, res, next) => {
     res.status(500).type("text/html").send("Error fetching the asset");
   }
 });
+}
 
 app.use(cookieParser());
 app.use(express.json({ limit: "32kb" }));
@@ -123,10 +143,25 @@ app.use((req, res, next) => {
   // Camera/mic must stay available on this origin: proxied pages (and many CAPTCHAs)
   // run in same-origin iframes and fail closed if these are globally denied.
   res.setHeader("Permissions-Policy", "camera=(self), microphone=(self), geolocation=(), payment=()");
-  const framed = req.path.startsWith("/uv/") || req.path.startsWith("/gn-") || req.path.startsWith("/gh-games/") || req.path.startsWith("/hosted/");
-  if (!framed) res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  if (!isFramedPath(req.path, runtime)) res.setHeader("X-Frame-Options", "SAMEORIGIN");
   next();
 });
+
+app.use((req, res, next) => {
+  if (isProxyPath(req.path, runtime)) return proxyLimiter(req, res, next);
+  next();
+});
+
+app.get("/__runtime.js", generalLimiter, (_req, res) => {
+  res.type("application/javascript").set("Cache-Control", "no-store").send(clientBootstrap(runtime));
+});
+
+if (runtime.disableGamesOnMainHost) {
+  app.use((req, res, next) => {
+    if (req.path.startsWith("/hosted/")) return res.status(404).end();
+    next();
+  });
+}
 
 const jsStaticOptions = {
   setHeaders: (res, filePath) => {
@@ -274,6 +309,10 @@ const reservedClientNames = [
   "US",
   "isInTabMode",
   "resolveProxyChoice",
+  "getRuntime",
+  "getPaths",
+  "getWispUrl",
+  "resolveGamesUrl",
   "waitForProxyBoot",
   "scramjet",
   "scramjetReady",
@@ -336,14 +375,26 @@ if (!vendorMap) {
   app.use("/assets/scramjet/", express.static(scramjetPath, jsStaticOptions));
 }
 
+function gamesRedirect(req, res) {
+  if (!runtime.gamesHost) return false;
+  const target = new URL(req.path, runtime.gamesHost);
+  res.redirect(302, target.href);
+  return true;
+}
+
 const routes = [
-  { path: "/apps", file: "apps.html" },
-  { path: "/games", file: "games.html" },
-  { path: "/play.html", file: "games.html" },
   { path: "/settings", file: "settings.html" },
   { path: "/tabs", file: "tabs.html" },
   { path: "/", file: "index.html" },
 ];
+
+if (!runtime.disableGamesOnMainHost) {
+  routes.unshift(
+    { path: "/apps", file: "apps.html" },
+    { path: "/games", file: "games.html" },
+    { path: "/play.html", file: "games.html" },
+  );
+}
 
 async function sendHtml(res, file) {
   const html = injectEduSeo(await readFile(path.join(SERVE_DIR, file), "utf8"));
@@ -351,7 +402,8 @@ async function sendHtml(res, file) {
 }
 
 routes.forEach(route => {
-  app.get(route.path, generalLimiter, (_req, res) => {
+  app.get(route.path, generalLimiter, (req, res) => {
+    if (gamesRedirect(req, res)) return;
     sendHtml(res, route.file).catch(err => {
       console.error(err);
       res.status(500).end();

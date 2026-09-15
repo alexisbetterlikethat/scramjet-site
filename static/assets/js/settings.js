@@ -11,11 +11,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   const transportRow = document.getElementById("transport-row");
   const pChangeElement = document.getElementById("pChange");
   if (pChangeElement) {
+    const uvOption = pChangeElement.querySelector('option[value="uv"]');
+    if (getRuntime().scramjetOnly && uvOption) uvOption.remove();
+
     pChangeElement.addEventListener("change", function () {
       localStorage.setItem("proxy", this.value);
-      if (transportRow) transportRow.style.display = this.value === "sj" ? "" : "none";
+      if (transportRow) transportRow.style.display = this.value === "uv" ? "none" : "";
     });
-    pChangeElement.value = (localStorage.getItem("proxy") ?? "sj") === "uv" ? "uv" : "sj";
+    const allowed = getRuntime().scramjetOnly ? ["sj", "eggs"] : ["sj", "eggs", "uv"];
+    const currentProxy = localStorage.getItem("proxy") ?? "sj";
+    pChangeElement.value = allowed.includes(currentProxy) ? currentProxy : "sj";
   }
 
   const transportElement = document.getElementById("transport-dropdown");
@@ -25,12 +30,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       localStorage.setItem("transport", this.value);
       window.location.reload();
     });
-    if (transportRow) transportRow.style.display = (localStorage.getItem("proxy") ?? "sj") !== "uv" ? "" : "none";
+    if (transportRow) transportRow.style.display = (localStorage.getItem("proxy") ?? "sj") === "uv" ? "none" : "";
   }
 
   const wispInput = document.getElementById("wisp-input");
   const wispSaveBtn = document.getElementById("wisp-save-btn");
   if (wispInput && wispSaveBtn) {
+    wispInput.placeholder = getWispUrl();
     wispInput.value = localStorage.getItem("wisp-url") || "";
     wispSaveBtn.addEventListener("click", () => {
       const val = wispInput.value.trim();

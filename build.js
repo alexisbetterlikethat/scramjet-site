@@ -71,6 +71,8 @@ function vendorTerserOptions({ module, aggressive }) {
 
 const OLD_UV_SCOPE = "/uv/";
 const OLD_SCRAMJET_SCOPE = "/uv/scramjet/";
+const OLD_EGGS_SCOPE = "/uv/eggs/";
+const OLD_WISP_PATH = "/wisp/";
 
 const RETIRED_PUBLIC_PREFIXES = ["/assets/ultraviolet/", "/assets/scramjet/", "/epoxy/", "/libcurl/", "/baremux/"];
 
@@ -1079,10 +1081,14 @@ async function build() {
 
   const uvBase = randomWord();
   const scramjetSub = randomWord();
+  const eggsSub = randomWord();
+  const wispSegment = randomWord();
   registry.reserveTopDir(uvBase);
 
   const NEW_UV_SCOPE = `/${uvBase}/`;
   const NEW_SCRAMJET_SCOPE = `/${uvBase}/${scramjetSub}/`;
+  const NEW_EGGS_SCOPE = `/${uvBase}/${eggsSub}/`;
+  const NEW_WISP_PATH = `/${wispSegment}/`;
   const proxyCodecs = createProxyCodecs();
   const scramjetGlobals = createScramjetGlobals();
   const identifierRenames = createIdentifierRenames();
@@ -1096,7 +1102,8 @@ async function build() {
 
   const manifest = {
     build: randomBytes(4).toString("hex"),
-    scopes: { uv: NEW_UV_SCOPE, scramjet: NEW_SCRAMJET_SCOPE },
+    scopes: { uv: NEW_UV_SCOPE, scramjet: NEW_SCRAMJET_SCOPE, eggs: NEW_EGGS_SCOPE },
+    wisp: NEW_WISP_PATH,
     sw: null,
     vendor: {},
   };
@@ -1150,12 +1157,16 @@ async function build() {
 
   const scopeRewrites = [
     [OLD_SCRAMJET_SCOPE, NEW_SCRAMJET_SCOPE],
+    [OLD_EGGS_SCOPE, NEW_EGGS_SCOPE],
     [OLD_UV_SCOPE, NEW_UV_SCOPE],
+    [OLD_WISP_PATH, NEW_WISP_PATH],
   ];
 
   console.log(`\nScope paths:`);
   console.log(`  ${OLD_UV_SCOPE} -> ${NEW_UV_SCOPE}`);
   console.log(`  ${OLD_SCRAMJET_SCOPE} -> ${NEW_SCRAMJET_SCOPE}`);
+  console.log(`  ${OLD_EGGS_SCOPE} -> ${NEW_EGGS_SCOPE}`);
+  console.log(`  ${OLD_WISP_PATH} -> ${NEW_WISP_PATH}`);
   console.log(`\nURL codecs:`);
   console.log(`  ultraviolet: ${proxyCodecs.uv}`);
   console.log(`  scramjet:    ${proxyCodecs.scramjet}`);
@@ -1324,11 +1335,12 @@ async function build() {
 
   const gateRenames = new Map([...identifierRenames, ["Ultraviolet", ultravioletName]]);
   for (const spec of specs) for (const name of spec.globals ?? []) if (name.startsWith(UV_PREFIX) && !gateRenames.has(name)) gateRenames.set(name, name.replace(UV_PREFIX, uvPrefixName));
-  const { checkedReferences } = await verifyBuild({ manifest, specs, emitted, references, distJsFiles, serverRoutes: manifest.analytics ? [manifest.analytics.loader] : [], identifierRenames: gateRenames });
+  const serverRoutes = ["/__runtime.js", ...(manifest.analytics ? [manifest.analytics.loader] : [])];
+  const { checkedReferences } = await verifyBuild({ manifest, specs, emitted, references, distJsFiles, serverRoutes, identifierRenames: gateRenames });
   console.log(chalk.green(`  all checks passed (${emitted.size} emitted assets, ${distJsFiles.length} scripts parsed, ${checkedReferences} asset references resolved across ${references.length} files)`));
 
   console.log(chalk.green("\nBuild complete -> dist/"));
-  console.log(chalk.blue(`\nBuild id: ${manifest.build}  scope: ${NEW_UV_SCOPE}  scramjet: ${NEW_SCRAMJET_SCOPE}  sw: ${manifest.sw}`));
+  console.log(chalk.blue(`\nBuild id: ${manifest.build}  scope: ${NEW_UV_SCOPE}  scramjet: ${NEW_SCRAMJET_SCOPE}  eggs: ${NEW_EGGS_SCOPE}  wisp: ${NEW_WISP_PATH}  sw: ${manifest.sw}`));
 }
 
 build().catch(err => {

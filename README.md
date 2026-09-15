@@ -30,6 +30,9 @@
 > [!IMPORTANT]
 > You **cannot** deploy to static web hosts, including Netlify, Cloudflare Pages, and GitHub Pages.
 
+> [!IMPORTANT]
+> Run `pnpm build` before `pnpm start` in production. The build randomizes proxy paths, the Wisp endpoint, and the service worker name. See [DEPLOY.md](./DEPLOY.md) for configuration options.
+
 ### Password Protection
 
 1. Go to the `config.js` file and set `challenge` to **true**. Then, set the environment variable as follows:

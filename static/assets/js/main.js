@@ -38,7 +38,7 @@
   }
 
   const PROXY_KEY = "proxy";
-  const ALLOWED = ["uv", "sj"];
+  const ALLOWED = ["uv", "sj", "eggs"];
   const DEFAULT = "sj";
 
   function initProxy() {
@@ -88,13 +88,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (nav) {
     const path = (window.location.pathname.replace(/\/$/, "") || "/").toLowerCase();
+    const gamesHref = resolveGamesUrl("/games");
+    const appsHref = resolveGamesUrl("/apps");
     const html = `
       <div id="icon-container">
         <a class="icon brand" href="/./"><span class="brand-name">Scramjet</span></a>
       </div>
       <div class="nav-bar-right">
-        <a class="navbar-link${path === "/games" ? " is-active" : ""}" href="/./games">${homoglyph("Games")}</a>
-        <a class="navbar-link${path === "/apps" ? " is-active" : ""}" href="/./apps">${homoglyph("Apps")}</a>
+        <a class="navbar-link${path === "/games" ? " is-active" : ""}" href="${gamesHref}">${homoglyph("Games")}</a>
+        <a class="navbar-link${path === "/apps" ? " is-active" : ""}" href="${appsHref}">${homoglyph("Apps")}</a>
         <a class="navbar-link${path === "/settings" ? " is-active" : ""}" href="/./settings">${homoglyph("Settings")}</a>
       </div>`;
     nav.innerHTML = html;
