@@ -88,6 +88,10 @@ const ghGamesBases = {
   "/gh-games/4/": "https://raw.githubusercontent.com/xbubbo/V6-Assets/main/",
 };
 const noMimeExts = new Set([".unityweb"]);
+const UNITY_HOSTS = {
+  slope: "https://slope.lol/games/slope/",
+  "slope-2": "https://lnahtml.github.io/a6/slope-2/",
+};
 
 if (!runtime.disableGamesOnMainHost) {
 app.get("/gh-games/:path(*)", ghGamesLimiter, async (req, res, next) => {
@@ -129,6 +133,43 @@ app.get("/gh-games/:path(*)", ghGamesLimiter, async (req, res, next) => {
   } catch (error) {
     console.error("Error fetching asset:", error);
     res.status(500).type("text/html").send("Error fetching the asset");
+  }
+});
+
+app.get(["/hosted/:game", "/hosted/:game/", "/hosted/:game/*"], ghGamesLimiter, async (req, res, next) => {
+  const base = UNITY_HOSTS[req.params.game];
+  if (!base) return next();
+  const rest = req.params[0];
+  let file = rest && rest !== "undefined" ? rest : "index.html";
+  if (file.endsWith("/")) file += "index.html";
+  if (!file || file.includes("..")) return res.sendStatus(400);
+  const target = new URL(file, base);
+  if (!target.href.startsWith(base)) return res.sendStatus(400);
+
+  try {
+    const asset = await fetch(target, {
+      headers: { "User-Agent": "Mozilla/5.0", Accept: req.headers.accept || "*/*" },
+      redirect: "follow",
+    });
+    if (!asset.ok) return res.sendStatus(asset.status);
+
+    const ext = path.extname(target.pathname) || ".html";
+    const type = noMimeExts.has(ext) ? "application/octet-stream" : mime.getType(ext) || asset.headers.get("content-type") || "application/octet-stream";
+    res.setHeader("Content-Type", type);
+    res.setHeader("Cache-Control", "public, max-age=86400");
+
+    if (type.includes("html")) {
+      let html = await asset.text();
+      html = html.replace(/<script[^>]*adinLoader[^>]*><\/script>/gi, "");
+      html = html.replace(/\s*src=["']\/adinLoader\.js["']/gi, "");
+      return res.send(html);
+    }
+
+    const data = Buffer.from(await asset.arrayBuffer());
+    res.end(data);
+  } catch (error) {
+    console.error("Error fetching unity game:", error);
+    res.status(502).end();
   }
 });
 }
