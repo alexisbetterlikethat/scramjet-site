@@ -10,6 +10,10 @@ const FALLBACK = {
   externalWisp: null,
   gamesHost: null,
   scramjetOnly: false,
+  pageRoutes: {
+    games: "/g",
+    apps: "/a",
+  },
 };
 
 function getRuntime() {
@@ -32,6 +36,11 @@ function getWispUrl() {
   return `${protocol}://${location.host}${path}`;
 }
 
+function getPageRoute(name) {
+  const routes = getRuntime().pageRoutes ?? FALLBACK.pageRoutes;
+  return routes[name];
+}
+
 function resolveGamesUrl(path) {
   const host = getRuntime().gamesHost;
   if (!host || !path.startsWith("/")) return path;
@@ -40,5 +49,6 @@ function resolveGamesUrl(path) {
 
 window.getRuntime = getRuntime;
 window.getPaths = getPaths;
+window.getPageRoute = getPageRoute;
 window.getWispUrl = getWispUrl;
 window.resolveGamesUrl = resolveGamesUrl;

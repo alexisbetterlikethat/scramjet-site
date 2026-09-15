@@ -88,15 +88,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (nav) {
     const path = (window.location.pathname.replace(/\/$/, "") || "/").toLowerCase();
-    const gamesHref = resolveGamesUrl("/games");
-    const appsHref = resolveGamesUrl("/apps");
+    const gamesPath = getPageRoute("games");
+    const appsPath = getPageRoute("apps");
+    const gamesHref = resolveGamesUrl(gamesPath);
+    const appsHref = resolveGamesUrl(appsPath);
     const html = `
       <div id="icon-container">
         <a class="icon brand" href="/./"><span class="brand-name">Scramjet</span></a>
       </div>
       <div class="nav-bar-right">
-        <a class="navbar-link${path === "/games" ? " is-active" : ""}" href="${gamesHref}">${homoglyph("Games")}</a>
-        <a class="navbar-link${path === "/apps" ? " is-active" : ""}" href="${appsHref}">${homoglyph("Apps")}</a>
+        <a class="navbar-link${path === gamesPath ? " is-active" : ""}" href="${gamesHref}">${homoglyph("Games")}</a>
+        <a class="navbar-link${path === appsPath ? " is-active" : ""}" href="${appsHref}">${homoglyph("Apps")}</a>
         <a class="navbar-link${path === "/settings" ? " is-active" : ""}" href="/./settings">${homoglyph("Settings")}</a>
       </div>`;
     nav.innerHTML = html;

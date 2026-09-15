@@ -27,7 +27,8 @@ The server reads `dist/.runtime/vendor-map.cjs` and serves `dist/` automatically
 |--------|---------|
 | `requireBuild` | Log a warning when `dist/` is missing |
 | `externalWisp` | Default Wisp URL (users can still override in Settings) |
-| `gamesHost` | Redirect `/games` and `/apps` to another origin |
+| `pageRoutes` | URL paths for games and apps pages (default `/g` and `/a`) |
+| `gamesHost` | Redirect games/apps page routes to another origin |
 | `disableGamesOnMainHost` | Remove games, apps, gh-games, and hosted routes from this host |
 | `scramjetOnly` | Hide Ultraviolet and skip loading it in the service worker |
 | `proxyRateLimit` | Rate limit for proxy scope and Wisp paths |

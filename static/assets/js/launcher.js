@@ -1,5 +1,5 @@
-const isGamesPage = window.location.pathname === "/games";
-const isAppsPage = window.location.pathname === "/apps";
+const isGamesPage = window.location.pathname === getPageRoute("games");
+const isAppsPage = window.location.pathname === getPageRoute("apps");
 
 function getStorageKey(baseKey) {
   if (isGamesPage) return `G${baseKey}`;

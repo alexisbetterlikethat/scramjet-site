@@ -108,7 +108,7 @@ const QUICK_APPS = [
   { name: "Reddit", url: "https://reddit.com" },
   { name: "X", url: "https://x.com" },
   { name: "Duck.ai", url: "https://duck.ai" },
-  { name: "Games", href: "/games" },
+  { name: "Games", href: getPageRoute("games") },
 ];
 
 const quickApps = document.getElementById("quick-apps");

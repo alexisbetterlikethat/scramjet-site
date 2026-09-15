@@ -311,6 +311,7 @@ const reservedClientNames = [
   "resolveProxyChoice",
   "getRuntime",
   "getPaths",
+  "getPageRoute",
   "getWispUrl",
   "resolveGamesUrl",
   "waitForProxyBoot",
@@ -389,11 +390,8 @@ const routes = [
 ];
 
 if (!runtime.disableGamesOnMainHost) {
-  routes.unshift(
-    { path: "/apps", file: "apps.html" },
-    { path: "/games", file: "games.html" },
-    { path: "/play.html", file: "games.html" },
-  );
+  const { games, apps } = runtime.pageRoutes;
+  routes.unshift({ path: apps, file: "apps.html" }, { path: games, file: "games.html" });
 }
 
 async function sendHtml(res, file) {

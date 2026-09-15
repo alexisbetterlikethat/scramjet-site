@@ -30,6 +30,11 @@ const config = {
     scramjet: "/uv/scramjet/",
     eggs: "/uv/eggs/",
   },
+
+  pageRoutes: {
+    games: "/g",
+    apps: "/a",
+  },
 };
 
 export default config;
