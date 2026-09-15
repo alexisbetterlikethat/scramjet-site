@@ -12,7 +12,6 @@ import basicAuth from "express-basic-auth";
 import rateLimit from "express-rate-limit";
 import mime from "mime";
 import config from "./config.js";
-import { injectEduSeo } from "./edu-seo-snippet.js";
 import { isVulgar, listChatModels, openRouterKey, sanitizeMessages, SYSTEM_PROMPT } from "./openrouter.js";
 import { clientBootstrap, isFramedPath, isProxyPath, resolveRuntime } from "./runtime.js";
 
@@ -42,7 +41,8 @@ if (vendorMap) {
 }
 
 if (config.requireBuild && !vendorMap) {
-  console.log(chalk.red("WARNING: No production build detected. Run `pnpm build` before deploying."));
+  console.error(chalk.red("Production build required. Run `npm run build` before starting the server."));
+  process.exit(1);
 }
 
 const server = http.createServer();
@@ -137,12 +137,20 @@ app.get("/gh-games/:path(*)", ghGamesLimiter, async (req, res, next) => {
 });
 
 app.get(["/hosted/:game", "/hosted/:game/", "/hosted/:game/*"], ghGamesLimiter, async (req, res, next) => {
-  const base = UNITY_HOSTS[req.params.game];
-  if (!base) return next();
+  const game = req.params.game;
   const rest = req.params[0];
   let file = rest && rest !== "undefined" ? rest : "index.html";
   if (file.endsWith("/")) file += "index.html";
   if (!file || file.includes("..")) return res.sendStatus(400);
+
+  const localRoot = path.resolve(SERVE_DIR, "hosted", game);
+  const localPath = path.resolve(localRoot, file);
+  if (localPath.startsWith(localRoot) && existsSync(localPath)) {
+    return res.sendFile(localPath);
+  }
+
+  const base = UNITY_HOSTS[game];
+  if (!base) return next();
   const target = new URL(file, base);
   if (!target.href.startsWith(base)) return res.sendStatus(400);
 
@@ -230,8 +238,8 @@ app.post("/api/y/chat", chatLimiter, express.json({ limit: "3mb" }), async (req,
       headers: {
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://overflowispeak.lol",
-        "X-Title": "Scramjet",
+        "HTTP-Referer": `${req.protocol}://${req.get("host")}`,
+        "X-Title": "Assistant",
       },
       body: JSON.stringify(payload),
     });
@@ -359,7 +367,7 @@ var xo=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u)
   });
 }
 
-const GITHUB_UA = { "User-Agent": "scramjet-site" };
+const GITHUB_UA = { "User-Agent": "Mozilla/5.0 (compatible; asset-fetch/1.0)" };
 const TOKEN = /^[A-Za-z0-9._-]+$/;
 const gnLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -431,16 +439,26 @@ const reservedClientNames = [
   "SplashT",
   "US",
   "isInTabMode",
-  "resolveProxyChoice",
+  "resolveEngineChoice",
   "getRuntime",
   "getPaths",
   "getPageRoute",
+  "getViewerPath",
+  "getEngine",
+  "setEngine",
+  "getTunnelUrl",
+  "setTunnelUrl",
   "getWispUrl",
   "resolveGamesUrl",
-  "waitForProxyBoot",
-  "scramjet",
-  "scramjetReady",
-  "__encodeProxyUrl",
+  "loadSjController",
+  "getRouteConfig",
+  "getRoutePrefix",
+  "pickCtor",
+  "importMuxModule",
+  "waitForBoot",
+  "_sjBoot",
+  "_sjEnc",
+  "__encodeNavUrl",
   "encode",
   "decode",
   "initCursorEffect",
@@ -483,6 +501,14 @@ app.get("/assets/js/:file", async (req, res, next) => {
   }
 });
 
+app.use(
+  "/assets/katex",
+  express.static(path.join(path.dirname(require.resolve("katex/package.json")), "dist"), {
+    maxAge: "365d",
+    immutable: true,
+  }),
+);
+
 app.use(express.static(SERVE_DIR, { ...jsStaticOptions, dotfiles: "ignore" }));
 
 if (!vendorMap) {
@@ -495,7 +521,9 @@ if (!vendorMap) {
   app.use("/epoxy/", express.static(epoxyPath));
   app.use("/libcurl/", express.static(libcurlPath));
   app.use("/baremux/", express.static(baremuxPath));
-  app.use("/assets/ultraviolet/", express.static(uvPath, jsStaticOptions));
+  if (!config.scramjetOnly) {
+    app.use("/assets/ultraviolet/", express.static(uvPath, jsStaticOptions));
+  }
   app.use("/assets/scramjet/", express.static(scramjetPath, jsStaticOptions));
 }
 
@@ -509,7 +537,7 @@ function gamesRedirect(req, res) {
 const routes = [
   { path: "/y", file: "y.html" },
   { path: "/settings", file: "settings.html" },
-  { path: "/tabs", file: "tabs.html" },
+  { path: runtime.pageRoutes.viewer, file: "tabs.html" },
   { path: "/", file: "index.html" },
 ];
 
@@ -518,11 +546,16 @@ if (!runtime.disableGamesOnMainHost) {
   routes.unshift({ path: apps, file: "apps.html" }, { path: games, file: "games.html" });
 }
 
+const NOINDEX_META = '<meta name="robots" content="noindex, nofollow" />';
+
 async function sendHtml(res, file) {
   const fromDist = path.join(SERVE_DIR, file);
   const fromStatic = path.join(STATIC_DIR, file);
   const htmlPath = existsSync(fromDist) ? fromDist : fromStatic;
-  const html = injectEduSeo(await readFile(htmlPath, "utf8"));
+  let html = await readFile(htmlPath, "utf8");
+  if (!/name=["']robots["']/i.test(html)) {
+    html = html.replace(/<head([^>]*)>/i, `<head$1>\n  ${NOINDEX_META}`);
+  }
   res.type("html").send(html);
 }
 

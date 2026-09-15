@@ -30,6 +30,7 @@ const { baremuxPath } = require("@mercuryworkshop/bare-mux/node");
 const { libcurlPath } = require("@mercuryworkshop/libcurl-transport");
 const { uvPath } = require("@titaniumnetwork-dev/ultraviolet");
 const { scramjetPath } = require("@mercuryworkshop/scramjet/path");
+const config = require("./config.js").default;
 
 // Application files to run through Terser instead of the obfuscator.
 const TERSER_ONLY = new Set();
@@ -282,7 +283,7 @@ function createScramjetGlobals() {
 // Names we own on both sides. Upstream Scramjet reads none of them, and none is reachable
 // from HTML.
 // Token-safe renames: every occurrence is a bare identifier, so the word-boundary pass
-// below handles them. encodeProxyUrl is a prefix of encodeProxyUrlSync, which the trailing
+// below handles them. encodeNavUrl is a prefix of encodeNavUrlSync, which the trailing
 // lookahead keeps apart.
 const RENAMED_IDENTIFIERS = [
   "__scramjet$config",
@@ -294,8 +295,9 @@ const RENAMED_IDENTIFIERS = [
   "$scramjetLoadController",
   "$scramjetLoadClient",
   "isGamesPage",
-  "encodeProxyUrl",
-  "encodeProxyUrlSync",
+  "encodeNavUrl",
+  "encodeNavUrlSync",
+  "__encodeNavUrl",
   "__uv$config",
   "UVClient",
   "UVServiceWorker",
@@ -627,7 +629,7 @@ async function exists(filePath) {
 }
 
 function vendorSpecs() {
-  return [
+  const specs = [
     {
       id: "uv.bundle",
       renameUvPrefix: true,
@@ -720,6 +722,8 @@ function vendorSpecs() {
       mangledAway: ["moduleOverrides", "ENVIRONMENT_IS_WEB", "wasmBinaryFile"],
     },
   ];
+  if (config.scramjetOnly) return specs.filter(spec => !spec.id.startsWith("uv."));
+  return specs;
 }
 
 function browserVendorModule(manifest) {
@@ -812,7 +816,7 @@ async function verifyBuild({ manifest, specs, emitted, references, distJsFiles, 
 }
 
 // CDN stylesheets own the fa/material names; rc- ids reach gsap.to(), not a selector call.
-const SELECTOR_KEEP = [/^fa$|^fas$|^far$|^fab$|^fa-/, /^material-symbols/, /^adsbygoogle$/, /^rc-/];
+const SELECTOR_KEEP = [/^fa$|^fas$|^far$|^fab$|^fa-/, /^material-symbols/, /^adsbygoogle$/, /^rc-/, /^katex/];
 
 // Applied from a bare array literal, so renaming means guessing at ordinary strings.
 const SELECTOR_KEEP_DYNAMIC = new Set(["stars", "stars2", "stars3"]);
@@ -1335,7 +1339,12 @@ async function build() {
 
   const gateRenames = new Map([...identifierRenames, ["Ultraviolet", ultravioletName]]);
   for (const spec of specs) for (const name of spec.globals ?? []) if (name.startsWith(UV_PREFIX) && !gateRenames.has(name)) gateRenames.set(name, name.replace(UV_PREFIX, uvPrefixName));
-  const serverRoutes = ["/__runtime.js", ...(manifest.analytics ? [manifest.analytics.loader] : [])];
+  const serverRoutes = [
+    "/__runtime.js",
+    "/assets/katex/katex.min.js",
+    "/assets/katex/katex.min.css",
+    ...(manifest.analytics ? [manifest.analytics.loader] : []),
+  ];
   const { checkedReferences } = await verifyBuild({ manifest, specs, emitted, references, distJsFiles, serverRoutes, identifierRenames: gateRenames });
   console.log(chalk.green(`  all checks passed (${emitted.size} emitted assets, ${distJsFiles.length} scripts parsed, ${checkedReferences} asset references resolved across ${references.length} files)`));
 

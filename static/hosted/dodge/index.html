@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dodge</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #0b0b0c; color: #fff; font-family: ui-sans-serif, system-ui, sans-serif; }
+    .wrap { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+    canvas { background: #141416; border: 1px solid #2a2a2e; border-radius: 12px; touch-action: none; }
+    p { margin: 0; color: #9a9a9a; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <canvas id="c" width="360" height="480"></canvas>
+    <p>Move with mouse, arrows, or touch. Score: <span id="s">0</span></p>
+  </div>
+  <script>
+    const canvas = document.getElementById("c");
+    const ctx = canvas.getContext("2d");
+    const scoreEl = document.getElementById("s");
+    const player = { x: 180, y: 420, w: 36, h: 14 };
+    let blocks = [], score = 0, dead = false, speed = 2.2;
+
+    function addBlock() {
+      blocks.push({ x: Math.random() * 320 + 10, y: -20, w: 24 + Math.random() * 40, h: 16 + Math.random() * 20 });
+    }
+
+    function movePlayer(x) {
+      player.x = Math.min(360 - player.w / 2, Math.max(player.w / 2, x));
+    }
+    canvas.addEventListener("pointermove", e => {
+      const rect = canvas.getBoundingClientRect();
+      movePlayer(e.clientX - rect.left);
+    });
+    window.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft") movePlayer(player.x - 18);
+      if (e.key === "ArrowRight") movePlayer(player.x + 18);
+    });
+
+    function loop() {
+      if (!dead) {
+        if (Math.random() < 0.04) addBlock();
+        for (const b of blocks) b.y += speed;
+        blocks = blocks.filter(b => b.y < 500);
+        score += 1;
+        if (score % 400 === 0) speed += 0.2;
+        scoreEl.textContent = Math.floor(score / 10);
+        for (const b of blocks) {
+          if (player.x - player.w / 2 < b.x + b.w && player.x + player.w / 2 > b.x && player.y < b.y + b.h && player.y + player.h > b.y) dead = true;
+        }
+      } else if (Math.random() < 0.02) {
+        dead = false; score = 0; speed = 2.2; blocks = []; player.x = 180;
+      }
+
+      ctx.fillStyle = "#141416"; ctx.fillRect(0, 0, 360, 480);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(player.x - player.w / 2, player.y, player.w, player.h);
+      for (const b of blocks) ctx.fillRect(b.x, b.y, b.w, b.h);
+      if (dead) { ctx.fillStyle = "#9a9a9a"; ctx.fillText("Hit — keep moving to retry", 80, 240); }
+      requestAnimationFrame(loop);
+    }
+    loop();
+  </script>
+</body>
+</html>

@@ -8,44 +8,31 @@ document.addEventListener("DOMContentLoaded", async () => {
     adTypeElement.value = storedAd === "popups" || storedAd === "off" ? storedAd : "default";
   }
 
-  const transportRow = document.getElementById("transport-row");
-  const pChangeElement = document.getElementById("pChange");
-  if (pChangeElement) {
-    const uvOption = pChangeElement.querySelector('option[value="uv"]');
-    if (getRuntime().scramjetOnly && uvOption) uvOption.remove();
-
-    pChangeElement.addEventListener("change", function () {
-      localStorage.setItem("proxy", this.value);
-      if (transportRow) transportRow.style.display = this.value === "uv" ? "none" : "";
-    });
-    const allowed = getRuntime().scramjetOnly ? ["sj", "eggs"] : ["sj", "eggs", "uv"];
-    const currentProxy = localStorage.getItem("proxy") ?? "sj";
-    pChangeElement.value = allowed.includes(currentProxy) ? currentProxy : "sj";
-  }
+  setEngine("sj");
 
   const transportElement = document.getElementById("transport-dropdown");
   if (transportElement) {
-    transportElement.value = localStorage.getItem("transport") === "epoxy" ? "epoxy" : "libcurl";
+    const stored = localStorage.getItem("transport");
+    transportElement.value = stored === "relay" || stored === "epoxy" ? "relay" : "standard";
     transportElement.addEventListener("change", function () {
       localStorage.setItem("transport", this.value);
       window.location.reload();
     });
-    if (transportRow) transportRow.style.display = (localStorage.getItem("proxy") ?? "sj") === "uv" ? "none" : "";
   }
 
   const wispInput = document.getElementById("wisp-input");
   const wispSaveBtn = document.getElementById("wisp-save-btn");
   if (wispInput && wispSaveBtn) {
     wispInput.placeholder = getWispUrl();
-    wispInput.value = localStorage.getItem("wisp-url") || "";
+    wispInput.value = getTunnelUrl();
     wispSaveBtn.addEventListener("click", () => {
       const val = wispInput.value.trim();
       if (val === "") {
-        localStorage.removeItem("wisp-url");
+        setTunnelUrl("");
       } else if (/^wss?:\/\//i.test(val)) {
-        localStorage.setItem("wisp-url", val);
+        setTunnelUrl(val);
       } else {
-        alert("Enter a valid Wisp URL starting with ws:// or wss://");
+        alert("Enter a valid tunnel URL starting with ws:// or wss://");
         return;
       }
       window.location.reload();
@@ -186,6 +173,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await initExtensionSettings();
   homoglyphDom(document.querySelector(".settings-container"));
+  document.querySelectorAll(".settings-card").forEach((card, index) => {
+    card.style.setProperty("--card-i", String(index));
+  });
 });
 
 async function initExtensionSettings() {
@@ -538,8 +528,8 @@ function importSaveData() {
           Object.entries(data.localStorage).forEach(([key, value]) => {
             localStorage.setItem(key, value);
           });
-          if (typeof window.resolveProxyChoice === "function") {
-            window.resolveProxyChoice();
+          if (typeof window.resolveEngineChoice === "function") {
+            window.resolveEngineChoice();
           }
         }
         alert("Save data imported.");

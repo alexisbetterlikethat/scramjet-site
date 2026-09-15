@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2048</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #0b0b0c; color: #fff; font-family: ui-sans-serif, system-ui, sans-serif; }
+    .wrap { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 16px; }
+    .head { display: flex; gap: 16px; align-items: center; }
+    .score { background: #141416; border: 1px solid #2a2a2e; border-radius: 10px; padding: 8px 14px; font-size: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(4, 72px); gap: 8px; background: #141416; padding: 8px; border-radius: 12px; border: 1px solid #2a2a2e; }
+    .cell { width: 72px; height: 72px; border-radius: 8px; background: #1e1e22; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; }
+    .v2 { background: #2a2a30; } .v4 { background: #35353d; } .v8 { background: #4a4a55; }
+    .v16 { background: #5c5c68; } .v32 { background: #6e6e7a; } .v64 { background: #80808f; }
+    p { margin: 0; color: #9a9a9a; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div class="score">Score: <span id="score">0</span></div>
+      <button id="new" style="background:#fff;color:#000;border:none;border-radius:8px;padding:8px 12px;cursor:pointer;">New</button>
+    </div>
+    <div class="grid" id="grid"></div>
+    <p>Arrow keys or swipe. Merge tiles to reach 2048.</p>
+  </div>
+  <script>
+    const gridEl = document.getElementById("grid");
+    const scoreEl = document.getElementById("score");
+    let board = [];
+    let score = 0;
+
+    function empty() { return Array.from({ length: 4 }, () => [0, 0, 0, 0]); }
+    function randCell() {
+      const open = [];
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) if (!board[r][c]) open.push([r, c]);
+      if (!open.length) return;
+      const [r, c] = open[Math.floor(Math.random() * open.length)];
+      board[r][c] = Math.random() < 0.9 ? 2 : 4;
+    }
+    function slide(line) {
+      const nums = line.filter(n => n);
+      const out = [];
+      for (let i = 0; i < nums.length; i++) {
+        if (nums[i] && nums[i] === nums[i + 1]) { out.push(nums[i] * 2); score += nums[i] * 2; i++; }
+        else out.push(nums[i] || 0);
+      }
+      while (out.length < 4) out.push(0);
+      return out;
+    }
+    function move(dir) {
+      const prev = JSON.stringify(board);
+      if (dir === "left") board = board.map(row => slide(row));
+      if (dir === "right") board = board.map(row => slide([...row].reverse()).reverse());
+      if (dir === "up") { rotate(); board = board.map(row => slide(row)); rotate(); rotate(); rotate(); }
+      if (dir === "down") { rotate(); rotate(); rotate(); board = board.map(row => slide(row)); rotate(); }
+      if (JSON.stringify(board) !== prev) randCell();
+      draw();
+    }
+    function rotate() {
+      const n = empty();
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) n[c][3 - r] = board[r][c];
+      board = n;
+    }
+    function draw() {
+      scoreEl.textContent = score;
+      gridEl.innerHTML = "";
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
+        const v = board[r][c];
+        const cell = document.createElement("div");
+        cell.className = "cell" + (v ? ` v${v}` : "");
+        cell.textContent = v || "";
+        gridEl.appendChild(cell);
+      }
+    }
+    function reset() { board = empty(); score = 0; randCell(); randCell(); draw(); }
+    document.getElementById("new").onclick = reset;
+    window.addEventListener("keydown", e => {
+      const map = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" };
+      if (map[e.key]) { e.preventDefault(); move(map[e.key]); }
+    });
+    let touchStart = null;
+    window.addEventListener("touchstart", e => { touchStart = e.changedTouches[0]; }, { passive: true });
+    window.addEventListener("touchend", e => {
+      if (!touchStart) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStart.clientX;
+      const dy = t.clientY - touchStart.clientY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 24) move(dx > 0 ? "right" : "left");
+      else if (Math.abs(dy) > 24) move(dy > 0 ? "down" : "up");
+      touchStart = null;
+    }, { passive: true });
+    reset();
+  </script>
+</body>
+</html>

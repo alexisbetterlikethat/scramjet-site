@@ -35,6 +35,81 @@
     ]
   },
   {
+    "name": "2048 (Hosted)",
+    "link": "/hosted/2048/",
+    "image": "/assets/media/icons/2048.webp",
+    "categories": [
+      "all",
+      "hosted",
+      "local",
+      "puzzle"
+    ]
+  },
+  {
+    "name": "Flappy (Hosted)",
+    "link": "/hosted/flappy/",
+    "image": "/assets/media/icons/doodlejump.webp",
+    "categories": [
+      "all",
+      "hosted",
+      "local",
+      "arcade"
+    ]
+  },
+  {
+    "name": "Pong (Hosted)",
+    "link": "/hosted/pong/",
+    "categories": [
+      "all",
+      "hosted",
+      "local",
+      "2P",
+      "arcade"
+    ]
+  },
+  {
+    "name": "Tetris (Hosted)",
+    "link": "/hosted/tetris/",
+    "categories": [
+      "all",
+      "hosted",
+      "local",
+      "puzzle",
+      "arcade"
+    ]
+  },
+  {
+    "name": "Asteroids (Hosted)",
+    "link": "/hosted/asteroids/",
+    "categories": [
+      "all",
+      "hosted",
+      "local",
+      "arcade"
+    ]
+  },
+  {
+    "name": "Dodge (Hosted)",
+    "link": "/hosted/dodge/",
+    "categories": [
+      "all",
+      "hosted",
+      "local",
+      "arcade"
+    ]
+  },
+  {
+    "name": "Tic-Tac-Toe (Hosted)",
+    "link": "/hosted/tictactoe/",
+    "categories": [
+      "all",
+      "hosted",
+      "local",
+      "puzzle",
+      "2P"
+    ]
+  },
+  {
     "name": "Fancade",
     "link": "https://play.fancade.com",
     "image": "/assets/media/icon/fancade.jpg",
@@ -423,7 +498,7 @@
   },
   {
     "name": "Stickman Hook",
-    "link": "/gh-games/stickman-hook/index.html",
+    "link": "/gh-games/1/stickman-hook/index.html",
     "image": "/assets/media/icons/stickmanhook.webp",
     "categories": [
       "all",
@@ -561,7 +636,7 @@
   },
   {
     "name": "Jetpack Joyride",
-    "link": "/gh-games/jetpack-joyride/index.html",
+    "link": "/gh-games/1/jetpack-joyride/index.html",
     "image": "/assets/media/icons/jetpackjoyride.webp",
     "categories": [
       "all",
@@ -796,7 +871,7 @@
   },
   {
     "name": "Duck Life 4",
-    "link": "/gh-games/ducklife4/index.html",
+    "link": "/gh-games/1/ducklife4/index.html",
     "image": "/assets/media/icons/dl4.webp",
     "categories": [
       "all",
@@ -984,7 +1059,7 @@
   },
   {
     "name": "Web Retro",
-    "link": "/gh-games/index.html",
+    "link": "/gh-games/3/index.html",
     "image": "/assets/media/icons/webretro.webp",
     "categories": [
       "all,",
@@ -2490,7 +2565,7 @@
   },
   {
     "name": "2048",
-    "link": "/gh-games/4/games/2048/index.html",
+    "link": "/hosted/2048/",
     "image": "/assets/media/icons/2048.webp",
     "categories": [
       "all",
@@ -3995,7 +4070,7 @@
   },
   {
     "name": "Flappy Bird",
-    "link": "/gn-html/129.html",
+    "link": "/hosted/flappy/",
     "image": "/gn-cover/129.png",
     "categories": [
       "all",

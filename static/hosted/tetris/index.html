@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tetris</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #0b0b0c; color: #fff; font-family: ui-sans-serif, system-ui, sans-serif; }
+    .wrap { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px; }
+    canvas { background: #141416; border: 1px solid #2a2a2e; border-radius: 12px; }
+    p { margin: 0; color: #9a9a9a; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <canvas id="c" width="240" height="400"></canvas>
+    <p>Arrows move, up rotates, down drops. Lines: <span id="s">0</span></p>
+  </div>
+  <script>
+    const shapes = {
+      I: [[1,1,1,1]], O: [[1,1],[1,1]], T: [[0,1,0],[1,1,1]], S: [[0,1,1],[1,1,0]], Z: [[1,1,0],[0,1,1]], J: [[1,0,0],[1,1,1]], L: [[0,0,1],[1,1,1]],
+    };
+    const cols = 10, rows = 20, size = 20;
+    const canvas = document.getElementById("c");
+    const ctx = canvas.getContext("2d");
+    const scoreEl = document.getElementById("s");
+    let grid = Array.from({ length: rows }, () => Array(cols).fill(0));
+    let piece = null, lines = 0, tick = 0;
+
+    function newPiece() {
+      const keys = Object.keys(shapes);
+      const k = keys[Math.floor(Math.random() * keys.length)];
+      return { m: shapes[k].map(r => [...r]), x: 3, y: 0 };
+    }
+    function rotate(m) {
+      const h = m.length, w = m[0].length;
+      const out = Array.from({ length: w }, () => Array(h).fill(0));
+      for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) out[c][h - 1 - r] = m[r][c];
+      return out;
+    }
+    function collides(p, ox = 0, oy = 0, mat = p.m) {
+      for (let r = 0; r < mat.length; r++) for (let c = 0; c < mat[r].length; c++) {
+        if (!mat[r][c]) continue;
+        const x = p.x + c + ox, y = p.y + r + oy;
+        if (x < 0 || x >= cols || y >= rows) return true;
+        if (y >= 0 && grid[y][x]) return true;
+      }
+      return false;
+    }
+    function merge() {
+      for (let r = 0; r < piece.m.length; r++) for (let c = 0; c < piece.m[r].length; c++) {
+        if (!piece.m[r][c]) continue;
+        const y = piece.y + r, x = piece.x + c;
+        if (y >= 0) grid[y][x] = 1;
+      }
+      let cleared = 0;
+      grid = grid.filter(row => { if (row.every(Boolean)) { cleared += 1; return false; } return true; });
+      while (grid.length < rows) grid.unshift(Array(cols).fill(0));
+      lines += cleared;
+      scoreEl.textContent = lines;
+      piece = newPiece();
+      if (collides(piece)) grid = Array.from({ length: rows }, () => Array(cols).fill(0));
+    }
+    function draw() {
+      ctx.fillStyle = "#141416"; ctx.fillRect(0, 0, 240, 400);
+      ctx.fillStyle = "#fff";
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (grid[r][c]) ctx.fillRect(c * size, r * size, size - 1, size - 1);
+      if (piece) for (let r = 0; r < piece.m.length; r++) for (let c = 0; c < piece.m[r].length; c++) {
+        if (!piece.m[r][c]) continue;
+        ctx.fillRect((piece.x + c) * size, (piece.y + r) * size, size - 1, size - 1);
+      }
+    }
+    window.addEventListener("keydown", e => {
+      if (!piece) return;
+      if (e.key === "ArrowLeft" && !collides(piece, -1, 0)) piece.x -= 1;
+      if (e.key === "ArrowRight" && !collides(piece, 1, 0)) piece.x += 1;
+      if (e.key === "ArrowDown") { while (!collides(piece, 0, 1)) piece.y += 1; merge(); }
+      if (e.key === "ArrowUp") { const rot = rotate(piece.m); if (!collides(piece, 0, 0, rot)) piece.m = rot; }
+      draw();
+    });
+    function step() {
+      tick += 1;
+      if (tick % 18 === 0 && piece) {
+        if (!collides(piece, 0, 1)) piece.y += 1;
+        else merge();
+      }
+      draw();
+      requestAnimationFrame(step);
+    }
+    piece = newPiece();
+    step();
+  </script>
+</body>
+</html>

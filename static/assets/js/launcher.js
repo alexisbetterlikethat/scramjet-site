@@ -70,6 +70,21 @@ function saveUrlToSession(url) {
   sessionStorage.setItem("GoUrl", url);
 }
 
+function rememberRecent(app, url) {
+  const link = url || app.link;
+  if (!app?.name || !link) return;
+  let list = [];
+  try {
+    list = JSON.parse(localStorage.getItem("sj-recent") || "[]");
+    if (!Array.isArray(list)) list = [];
+  } catch {
+    list = [];
+  }
+  list = list.filter(item => item.link !== link);
+  list.unshift({ name: app.name, link, local: Boolean(app.local || app.local2), proxy: app.proxy || "" });
+  localStorage.setItem("sj-recent", JSON.stringify(list.slice(0, 8)));
+}
+
 async function handleAppClick(app) {
   if (app.say) {
     alert(app.say);
@@ -82,11 +97,12 @@ async function handleAppClick(app) {
   }
 
   const proxy = app.proxy;
+  rememberRecent(app, selectedUrl);
 
   try {
     if (app.local) {
       saveUrlToSession(selectedUrl);
-      window.location.href = isInTabMode ? selectedUrl : "/tabs";
+      window.location.href = isInTabMode ? selectedUrl : getViewerPath();
     } else if (app.local2) {
       saveUrlToSession(selectedUrl);
       window.location.href = selectedUrl;
@@ -102,12 +118,12 @@ async function handleAppClick(app) {
       if (isInTabMode && typeof blank === "function") await blank(selectedUrl, proxy);
     } else {
       saveUrlToSession(selectedUrl);
-      window.location.href = "/tabs";
+      window.location.href = getViewerPath();
     }
   } catch (error) {
     console.error(error);
     saveUrlToSession(selectedUrl);
-    window.location.href = "/tabs";
+    window.location.href = getViewerPath();
   }
 
   return false;
@@ -143,7 +159,15 @@ function saveCustomApp(customApp) {
 }
 
 function closeSiteModal() {
-  document.getElementById("site-modal")?.remove();
+  const modal = document.getElementById("site-modal");
+  if (!modal) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    modal.remove();
+    return;
+  }
+  modal.classList.remove("is-open");
+  modal.classList.add("is-closing");
+  window.setTimeout(() => modal.remove(), 180);
 }
 
 function openSiteModal({ title, hint, fields, submitLabel, onSubmit }) {
@@ -193,6 +217,7 @@ function openSiteModal({ title, hint, fields, submitLabel, onSubmit }) {
   panel.appendChild(form);
   overlay.appendChild(panel);
   document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add("is-open"));
   form.querySelector("input, textarea")?.focus();
 }
 
@@ -307,9 +332,10 @@ function extraGameTags(name = "") {
   return tags;
 }
 
-function renderAppCard(app, appIndex, isCustom = false) {
+function renderAppCard(app, appIndex, isCustom = false, staggerIndex = 0) {
   const columnDiv = document.createElement("div");
   columnDiv.classList.add("column");
+  columnDiv.style.setProperty("--stagger", String(staggerIndex));
 
   const categories = isCustom
     ? "all"
@@ -456,12 +482,13 @@ function loadAppsFromJson() {
       appsList.unshift(...specialCards);
 
       let appIndex = 0;
+      let staggerIndex = 0;
 
       appsList.forEach(app => {
         applyAppFlags(app);
         if (featuredSet.has(app)) app.popular = true;
 
-        const card = renderAppCard(app, appIndex);
+        const card = renderAppCard(app, appIndex, false, staggerIndex);
 
         if (app.custom) {
           pinnedContainer.appendChild(card);
@@ -474,6 +501,7 @@ function loadAppsFromJson() {
         }
 
         appIndex++;
+        staggerIndex++;
       });
 
       loadCustomAppsInline();
@@ -511,7 +539,16 @@ function applyFilters() {
       selectedCategories.includes("all") ||
       selectedCategories.some(cat => categories.includes(cat));
 
-    card.style.display = matchesSearch && matchesCategory ? "block" : "none";
+    const visible = matchesSearch && matchesCategory;
+    if (visible) {
+      card.style.display = "block";
+      requestAnimationFrame(() => card.classList.remove("is-filtered-out"));
+    } else {
+      card.classList.add("is-filtered-out");
+      window.setTimeout(() => {
+        if (card.classList.contains("is-filtered-out")) card.style.display = "none";
+      }, 220);
+    }
   });
 }
 

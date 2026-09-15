@@ -10,18 +10,18 @@
   <link rel="stylesheet" href="/assets/css/global.css" />
   <link rel="stylesheet" href="/assets/css/nav.css" />
   <link rel="stylesheet" href="/assets/css/y.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css" />
+  <link rel="stylesheet" href="/assets/katex/katex.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <script src="/__runtime.js"></script>
+  <script src="/assets/js/storage.js"></script>
   <script src="/assets/js/runtime-client.js"></script>
   <script src="/assets/js/homoglyphs.js"></script>
   <script src="/assets/js/main.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/contrib/auto-render.min.js"></script>
 </head>
 <body class="y-page">
   <div class="nav-bar"></div>
   <main class="y-main">
+    <button class="y-new" type="button" id="y-new" hidden>New chat</button>
     <section class="y-thread" id="y-thread"></section>
     <form class="y-dock" id="y-form">
       <div class="y-composer">
@@ -49,6 +49,7 @@
       </div>
     </form>
   </main>
+  <script src="/assets/katex/katex.min.js"></script>
   <script src="/assets/js/y.js"></script>
 </body>
 </html>

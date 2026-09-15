@@ -7,13 +7,14 @@ const FALLBACK = {
     scramjet: "/uv/scramjet/",
     eggs: "/uv/eggs/",
   },
-  externalWisp: null,
-  gamesHost: null,
-  scramjetOnly: false,
   pageRoutes: {
     games: "/g",
     apps: "/a",
+    viewer: "/v",
   },
+  externalWisp: null,
+  gamesHost: null,
+  scramjetOnly: true,
 };
 
 function getRuntime() {
@@ -24,8 +25,17 @@ function getPaths() {
   return getRuntime().paths;
 }
 
+function getPageRoute(name) {
+  const routes = getRuntime().pageRoutes ?? FALLBACK.pageRoutes;
+  return routes[name];
+}
+
+function getViewerPath() {
+  return getPageRoute("viewer");
+}
+
 function getWispUrl() {
-  const custom = localStorage.getItem("wisp-url")?.trim();
+  const custom = getTunnelUrl().trim();
   if (custom && /^wss?:\/\//i.test(custom)) return custom;
 
   const runtime = getRuntime();
@@ -36,19 +46,46 @@ function getWispUrl() {
   return `${protocol}://${location.host}${path}`;
 }
 
-function getPageRoute(name) {
-  const routes = getRuntime().pageRoutes ?? FALLBACK.pageRoutes;
-  return routes[name];
-}
-
 function resolveGamesUrl(path) {
   const host = getRuntime().gamesHost;
   if (!host || !path.startsWith("/")) return path;
   return new URL(path, host).href;
 }
 
+function getRouteConfig() {
+  return self.__scramjet$config;
+}
+
+function getRoutePrefix(alt = false) {
+  const paths = getPaths();
+  return alt ? paths.eggs : paths.scramjet;
+}
+
+function pickCtor(mod) {
+  return Object.values(mod).find(value => typeof value === "function");
+}
+
+function loadSjController() {
+  const globals = getRouteConfig()?.globals;
+  const name = globals?.$scramjetLoadController ?? "$scramjetLoadController";
+  const fn = self[name];
+  if (typeof fn !== "function") throw new Error("Transport loader unavailable");
+  return fn();
+}
+
+function importMuxModule() {
+  const vendor = self.__vendor || {};
+  return import(vendor.baremux);
+}
+
 window.getRuntime = getRuntime;
 window.getPaths = getPaths;
 window.getPageRoute = getPageRoute;
+window.getViewerPath = getViewerPath;
 window.getWispUrl = getWispUrl;
 window.resolveGamesUrl = resolveGamesUrl;
+window.getRouteConfig = getRouteConfig;
+window.getRoutePrefix = getRoutePrefix;
+window.pickCtor = pickCtor;
+window.loadSjController = loadSjController;
+window.importMuxModule = importMuxModule;

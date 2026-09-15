@@ -1,0 +1,190 @@
+/* Shared motion — respects prefers-reduced-motion at the bottom */
+
+@keyframes fade-up {
+   from {
+      opacity: 0;
+      transform: translateY(14px);
+   }
+   to {
+      opacity: 1;
+      transform: translateY(0);
+   }
+}
+
+@keyframes fade-in {
+   from {
+      opacity: 0;
+   }
+   to {
+      opacity: 1;
+   }
+}
+
+@keyframes scale-in {
+   from {
+      opacity: 0;
+      transform: scale(0.96);
+   }
+   to {
+      opacity: 1;
+      transform: scale(1);
+   }
+}
+
+@keyframes nav-drop {
+   from {
+      opacity: 0;
+      transform: translateY(-10px);
+   }
+   to {
+      opacity: 1;
+      transform: translateY(0);
+   }
+}
+
+@keyframes card-in {
+   from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.97);
+   }
+   to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+   }
+}
+
+@keyframes shimmer {
+   to {
+      background-position: 200% center;
+   }
+}
+
+@keyframes modal-backdrop-in {
+   from {
+      opacity: 0;
+   }
+   to {
+      opacity: 1;
+   }
+}
+
+@keyframes modal-panel-in {
+   from {
+      opacity: 0;
+      transform: translateY(12px) scale(0.97);
+   }
+   to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+   }
+}
+
+@keyframes modal-backdrop-out {
+   from {
+      opacity: 1;
+   }
+   to {
+      opacity: 0;
+   }
+}
+
+@keyframes modal-panel-out {
+   from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+   }
+   to {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+   }
+}
+
+@keyframes pulse-soft {
+   0%,
+   100% {
+      opacity: 0.55;
+   }
+   50% {
+      opacity: 1;
+   }
+}
+
+.nav-bar {
+   animation: nav-drop 0.55s var(--ease-spring) both;
+}
+
+#apps-container {
+   animation: fade-up 0.65s var(--ease-spring) 0.08s both;
+}
+
+.input-c {
+   animation: fade-up 0.6s var(--ease-spring) 0.04s both;
+}
+
+.games-section {
+   animation: fade-up 0.55s var(--ease-spring) both;
+}
+
+.column {
+   --stagger: 0;
+   animation: card-in 0.5s var(--ease-spring) both;
+   animation-delay: calc(min(var(--stagger), 28) * 0.028s);
+}
+
+.column.is-filtered-out {
+   opacity: 0;
+   transform: scale(0.96) translateY(6px);
+   pointer-events: none;
+   filter: blur(2px);
+}
+
+.column:not(.is-filtered-out) {
+   transition:
+      opacity 0.22s var(--ease-spring),
+      transform 0.22s var(--ease-spring);
+}
+
+.site-modal {
+   opacity: 0;
+}
+
+.site-modal.is-open {
+   animation: modal-backdrop-in 0.22s ease both;
+}
+
+.site-modal.is-open .site-modal-panel {
+   animation: modal-panel-in 0.32s var(--ease-spring) both;
+}
+
+.site-modal.is-closing {
+   animation: modal-backdrop-out 0.18s ease both;
+   pointer-events: none;
+}
+
+.site-modal.is-closing .site-modal-panel {
+   animation: modal-panel-out 0.18s ease both;
+}
+
+.settings-card {
+   animation: fade-up 0.5s var(--ease-spring) both;
+   animation-delay: calc(var(--card-i, 0) * 0.04s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+   *,
+   *::before,
+   *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+   }
+
+   .column {
+      animation: none;
+   }
+
+   .column.is-filtered-out {
+      display: none;
+   }
+}

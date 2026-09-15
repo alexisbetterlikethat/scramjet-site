@@ -37,34 +37,22 @@
     }
   }
 
-  const PROXY_KEY = "proxy";
-  const ALLOWED = ["uv", "sj", "eggs"];
-  const DEFAULT = "sj";
-
-  function initProxy() {
-    const current = localStorage.getItem(PROXY_KEY);
-    if (current === null) {
-      localStorage.setItem(PROXY_KEY, DEFAULT);
-      return DEFAULT;
-    }
-    if (ALLOWED.includes(current)) {
-      return current;
-    }
-    localStorage.setItem(PROXY_KEY, DEFAULT);
-    return DEFAULT;
+  function initEngine() {
+    setEngine("sj");
+    return "sj";
   }
 
-  window.resolveProxyChoice = initProxy;
-  window.resolveProxyChoice();
+  window.resolveEngineChoice = initEngine;
+  window.resolveEngineChoice();
 })();
 
 let isInTabMode;
 
 try {
-  isInTabMode = window.top.location.pathname === "/tabs";
+  isInTabMode = window.top.location.pathname === getViewerPath();
 } catch {
   try {
-    isInTabMode = window.parent.location.pathname === "/tabs";
+    isInTabMode = window.parent.location.pathname === getViewerPath();
   } catch {
     isInTabMode = false;
   }
@@ -97,13 +85,18 @@ document.addEventListener("DOMContentLoaded", () => {
         <a class="icon brand" href="/./"><span class="brand-name">Scramjet</span></a>
       </div>
       <div class="nav-bar-right">
-        <a class="navbar-link${path === gamesPath ? " is-active" : ""}" href="${gamesHref}"><i class="fa-solid fa-gamepad"></i><span>${homoglyph("Games")}</span></a>
-        <a class="navbar-link${path === appsPath ? " is-active" : ""}" href="${appsHref}"><i class="fa-solid fa-table-cells"></i><span>${homoglyph("Apps")}</span></a>
-        <a class="navbar-link${path === "/y" ? " is-active" : ""}" href="/./y"><i class="fa-solid fa-wand-magic-sparkles"></i><span>${homoglyph("AI")}</span></a>
-        <a class="navbar-link${path === "/settings" ? " is-active" : ""}" href="/./settings"><i class="fa-solid fa-gear"></i><span>${homoglyph("Settings")}</span></a>
+        <a class="navbar-link${path === gamesPath ? " is-active" : ""}" href="${gamesHref}"><span class="navbar-link-icon" aria-hidden="true"><i class="fa-solid fa-fw fa-gamepad"></i></span><span class="navbar-link-label">${homoglyph("Games")}</span></a>
+        <a class="navbar-link${path === appsPath ? " is-active" : ""}" href="${appsHref}"><span class="navbar-link-icon" aria-hidden="true"><i class="fa-solid fa-fw fa-table-cells"></i></span><span class="navbar-link-label">${homoglyph("Apps")}</span></a>
+        <a class="navbar-link${path === "/y" ? " is-active" : ""}" href="/./y"><span class="navbar-link-icon" aria-hidden="true"><i class="fa-solid fa-fw fa-wand-magic-sparkles"></i></span><span class="navbar-link-label">${homoglyph("AI")}</span></a>
+        <a class="navbar-link${path === "/settings" ? " is-active" : ""}" href="/./settings"><span class="navbar-link-icon" aria-hidden="true"><i class="fa-solid fa-fw fa-gear"></i></span><span class="navbar-link-label">${homoglyph("Settings")}</span></a>
       </div>`;
     nav.innerHTML = html;
   }
+
+  homoglyphDom(document.querySelector(".main"));
+  homoglyphDom(document.querySelector(".input-c"));
+  homoglyphDom(document.querySelector(".settings-container"));
+  if (document.body?.id === "no") homoglyphDom(document.querySelector(".browser-bar"));
 
   const search = document.getElementById("search");
   if (search?.placeholder) search.placeholder = homoglyph(search.placeholder);

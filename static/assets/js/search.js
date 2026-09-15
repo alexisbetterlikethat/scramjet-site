@@ -22,7 +22,7 @@ const swReadyPromise = new Promise(resolve => {
   swReadyResolve = resolve;
 });
 
-function isTabsPage() {
+function isViewerPage() {
   return document.body?.id === "no" || Boolean(document.getElementById("frame-container"));
 }
 
@@ -75,75 +75,28 @@ async function waitForServiceWorker() {
 const form = document.getElementById("fv");
 const input = document.getElementById("input");
 
-if (form && input && !isTabsPage()) {
+if (form && input && !isViewerPage()) {
   form.addEventListener("submit", async event => {
     event.preventDefault();
+    const viewer = getViewerPath();
     try {
       if (isInTabMode) await navigate(input.value, "");
-      else await navigate(input.value, "/tabs");
+      else await navigate(input.value, viewer);
     } catch {
-      await navigate(input.value, "/tabs");
+      await navigate(input.value, viewer);
     }
   });
 }
 
-function proxyChoice(proxyOverride) {
-  return proxyOverride ?? localStorage.getItem("proxy") ?? "sj";
+async function encodeUrl(url) {
+  if (window._sjBoot) await window._sjBoot;
+  if (window._sjEnc?.encodeUrl) return window._sjEnc.encodeUrl(url);
+  throw new Error("Route is not ready");
 }
 
-function isScramjet(proxyOverride) {
-  const choice = proxyChoice(proxyOverride);
-  return choice !== "uv";
-}
-
-function isEggs(proxyOverride) {
-  return proxyChoice(proxyOverride) === "eggs";
-}
-
-async function ensureUltraviolet() {
-  if (self.__uv$config) return;
-  const load = src =>
-    new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = src;
-      script.onload = resolve;
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  await load("/assets/ultraviolet/uv.bundle.js");
-  await load("/assets/ultraviolet/uv.config.js");
-}
-window.ensureUltraviolet = ensureUltraviolet;
-
-async function encodeUrl(url, proxyOverride) {
-  const paths = getPaths();
-
-  if (isEggs(proxyOverride)) {
-    if (window.scramjetReady) await window.scramjetReady;
-    if (window.eggs?.encodeUrl) return window.eggs.encodeUrl(url);
-    if (window.scramjet?.encodeUrl) return window.scramjet.encodeUrl(url);
-    throw new Error("Scrambled Eggs is not ready");
-  }
-
-  if (isScramjet(proxyOverride)) {
-    if (window.scramjetReady) await window.scramjetReady;
-    if (window.scramjet?.encodeUrl) return window.scramjet.encodeUrl(url);
-    throw new Error("Scramjet is not ready");
-  }
-
-  if (getRuntime().scramjetOnly) {
-    if (window.scramjetReady) await window.scramjetReady;
-    if (window.scramjet?.encodeUrl) return window.scramjet.encodeUrl(url);
-    throw new Error("Scramjet is not ready");
-  }
-
-  await ensureUltraviolet();
-  return `${paths.uv}${__uv$config.encodeUrl ? __uv$config.encodeUrl(url) : window.encode.xor(url)}`;
-}
-
-async function navigate(value, path, proxyOverride) {
+async function navigate(value, path) {
   await waitForServiceWorker();
-  if (window.waitForProxyBoot) await window.waitForProxyBoot();
+  if (window.waitForBoot) await window.waitForBoot();
 
   let url = value.trim();
   const engine = localStorage.getItem("engine");
@@ -155,19 +108,19 @@ async function navigate(value, path, proxyOverride) {
     url = `https://${url}`;
   }
 
-  const proxyUrl = await encodeUrl(url, proxyOverride);
-  sessionStorage.setItem("GoUrl", proxyUrl);
+  const targetUrl = await encodeUrl(url);
+  sessionStorage.setItem("GoUrl", targetUrl);
 
   if (path) location.href = path;
-  else window.location.href = proxyUrl;
+  else window.location.href = targetUrl;
 }
 
-function go(value, proxyOverride) {
-  return navigate(value, "/tabs", proxyOverride);
+function go(value) {
+  return navigate(value, getViewerPath());
 }
 
-function blank(value, proxyOverride) {
-  return navigate(value, "", proxyOverride);
+function blank(value) {
+  return navigate(value, "");
 }
 
 function isValidUrl(val = "") {
@@ -190,69 +143,46 @@ function isValidUrl(val = "") {
   }
 
   async function init() {
-    const [{ BareMuxConnection }, { ScramjetController }] = await Promise.all([import(vendor.baremux), window.$scramjetLoadController()]);
+    const [muxMod, sjMod] = await Promise.all([importMuxModule(), loadSjController()]);
+    const MuxConnection = pickCtor(muxMod);
+    const RouteController = pickCtor(sjMod);
+    const routeConfig = getRouteConfig();
 
-    const paths = getPaths();
-    const scramjet = new ScramjetController(self.__scramjet$config);
-    await scramjet.init();
+    const primary = new RouteController(routeConfig);
+    await primary.init();
 
-    window.scramjet = {
-      encodeUrl: url => scramjet.encodeUrl(url),
-      decodeUrl: url => scramjet.decodeUrl(url),
+    window._sjEnc = {
+      encodeUrl: url => primary.encodeUrl(url),
+      decodeUrl: url => primary.decodeUrl(url),
     };
 
-    try {
-      const eggs = new ScramjetController({
-        ...self.__scramjet$config,
-        prefix: paths.eggs,
-        flags: {
-          rewriterLogs: false,
-          scramitize: false,
-          cleanErrors: true,
-          sourcemaps: false,
-        },
-      });
-      await eggs.init();
-      window.eggs = {
-        encodeUrl: url => eggs.encodeUrl(url),
-        decodeUrl: url => eggs.decodeUrl(url),
-      };
-    } catch (error) {
-      window.eggs = {
-        encodeUrl: url => scramjet.encodeUrl(url).replace(paths.scramjet, paths.eggs),
-        decodeUrl: url => scramjet.decodeUrl(String(url).replace(paths.eggs, paths.scramjet)),
-      };
-      console.warn("Scrambled Eggs using light fallback:", error);
-    }
-
-    const wisp = getWispUrl();
-    const connection = new BareMuxConnection(vendor.baremuxWorker);
-    const usingEggs = localStorage.getItem("proxy") === "eggs";
-    const transport = usingEggs ? "libcurl" : localStorage.getItem("transport") || "libcurl";
-    if (transport === "epoxy") {
-      await ensureTransport(connection, vendor.epoxy, [{ wisp }], `${vendor.epoxy}|${wisp}`);
+    const tunnel = getWispUrl();
+    const connection = new MuxConnection(vendor.baremuxWorker);
+    const transport = localStorage.getItem("transport") === "relay" ? "relay" : "standard";
+    if (transport === "relay") {
+      await ensureTransport(connection, vendor.epoxy, [{ wisp: tunnel }], `${vendor.epoxy}|${tunnel}`);
     } else {
-      await ensureTransport(connection, vendor.libcurl, [{ websocket: wisp }], `${vendor.libcurl}|${wisp}`);
+      await ensureTransport(connection, vendor.libcurl, [{ websocket: tunnel }], `${vendor.libcurl}|${tunnel}`);
     }
   }
 
   async function boot() {
-    if (typeof window.$scramjetLoadController !== "function" || !self.__scramjet$config) return;
+    if (!getRouteConfig()) return;
     try {
       await init();
     } catch (error) {
-      console.error("Scramjet transport failed to start:", error);
+      console.error("Transport failed to start:", error);
     }
   }
 
   const domReady =
     document.readyState === "loading" ? new Promise(resolve => document.addEventListener("DOMContentLoaded", resolve, { once: true })) : Promise.resolve();
 
-  window.scramjetReady = domReady.then(boot);
+  window._sjBoot = domReady.then(boot);
 })();
 
-window.waitForProxyBoot = async function waitForProxyBoot(timeout) {
-  const wait = timeout ?? (localStorage.getItem("proxy") === "eggs" ? 5000 : 12000);
-  if (!window.scramjetReady) return;
-  await Promise.race([window.scramjetReady.catch(() => {}), new Promise(resolve => setTimeout(resolve, wait))]);
+window.waitForBoot = async function waitForBoot(timeout) {
+  const wait = timeout ?? 12000;
+  if (!window._sjBoot) return;
+  await Promise.race([window._sjBoot.catch(() => {}), new Promise(resolve => setTimeout(resolve, wait))]);
 };

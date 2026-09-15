@@ -6,46 +6,18 @@ function prependHttps(url) {
   return url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`;
 }
 
-function isScramjetEnabled() {
-  return (localStorage.getItem("proxy") ?? "sj") !== "uv";
+async function encodeNavUrl(url) {
+  if (window._sjBoot) await window._sjBoot;
+  if (window._sjEnc?.encodeUrl) return window._sjEnc.encodeUrl(url);
+  throw new Error("Route is not ready");
 }
 
-function isEggsEnabled() {
-  return (localStorage.getItem("proxy") ?? "sj") === "eggs";
-}
-
-async function encodeProxyUrl(url) {
-  if (isEggsEnabled()) {
-    if (window.scramjetReady) await window.scramjetReady;
-    if (window.eggs?.encodeUrl) return window.eggs.encodeUrl(url);
-    if (window.scramjet?.encodeUrl) return window.scramjet.encodeUrl(url);
-    throw new Error("Scrambled Eggs is not ready");
-  }
-  if (isScramjetEnabled()) {
-    if (window.scramjetReady) await window.scramjetReady;
-    if (window.scramjet?.encodeUrl) return window.scramjet.encodeUrl(url);
-    throw new Error("Scramjet is not ready");
-  }
-  if (getRuntime().scramjetOnly) {
-    if (window.scramjet?.encodeUrl) return window.scramjet.encodeUrl(url);
-    throw new Error("Scramjet is not ready");
-  }
-  if (window.ensureUltraviolet) await window.ensureUltraviolet();
-  const { uv } = getPaths();
-  return `${uv}${__uv$config.encodeUrl ? __uv$config.encodeUrl(url) : window.encode.xor(url)}`;
-}
-
-function encodeProxyUrlSync(url) {
-  const { uv } = getPaths();
-  if (isEggsEnabled() && window.eggs?.encodeUrl) return window.eggs.encodeUrl(url);
-  if (isScramjetEnabled() && window.scramjet?.encodeUrl) return window.scramjet.encodeUrl(url);
-  if (getRuntime().scramjetOnly && window.scramjet?.encodeUrl) return window.scramjet.encodeUrl(url);
-  if (self.__uv$config?.encodeUrl) return `${uv}${__uv$config.encodeUrl(url)}`;
-  if (window.encode?.xor) return `${uv}${window.encode.xor(url)}`;
+function encodeNavUrlSync(url) {
+  if (window._sjEnc?.encodeUrl) return window._sjEnc.encodeUrl(url);
   return url;
 }
 
-window.__encodeProxyUrl = encodeProxyUrlSync;
+window.__encodeNavUrl = encodeNavUrlSync;
 
 function isLocalAsset(url = "") {
   return url.includes("/gh-games/") || url.includes("/hosted/");
@@ -74,21 +46,17 @@ function updateAddressBar() {
 
   const paths = getPaths();
   if (currentUrl.includes(paths.eggs)) {
-    const decoded = window.eggs?.decodeUrl ? window.eggs.decodeUrl(currentUrl) : currentUrl;
+    const decoded = window._sjEncAlt?.decodeUrl ? window._sjEncAlt.decodeUrl(currentUrl) : currentUrl;
     localStorage.setItem("decoded", decoded);
     input.value = decoded;
-  } else if (currentUrl.includes(paths.scramjet)) {
-    if (window.scramjet?.decodeUrl) {
-      const decoded = window.scramjet.decodeUrl(currentUrl);
+  } else if (currentUrl.includes(getRoutePrefix())) {
+    if (window._sjEnc?.decodeUrl) {
+      const decoded = window._sjEnc.decodeUrl(currentUrl);
       localStorage.setItem("decoded", decoded);
       input.value = decoded;
     } else {
       input.value = currentUrl;
     }
-  } else if (currentUrl.includes(paths.uv)) {
-    const path = currentUrl.replace(window.location.origin, "").replace(paths.uv, "");
-    localStorage.setItem("decoded", path);
-    input.value = self.__uv$config?.decodeUrl ? __uv$config.decodeUrl(path) : window.decode.xor(path);
   } else {
     const path = currentUrl.replace(window.location.origin, "");
     input.value = path;
@@ -231,16 +199,16 @@ window.addEventListener("load", () => {
   }
 
   async function navigateActiveTab(url) {
-    if (window.waitForProxyBoot) await window.waitForProxyBoot();
-    const proxyUrl = await encodeProxyUrl(url);
-    sessionStorage.setItem("GoUrl", proxyUrl);
+    if (window.waitForBoot) await window.waitForBoot();
+    const targetUrl = await encodeNavUrl(url);
+    sessionStorage.setItem("GoUrl", targetUrl);
     const iframeContainer = document.getElementById("frame-container");
     const activeIframe = Array.from(iframeContainer.querySelectorAll("iframe")).find(f => f.classList.contains("active"));
     if (!activeIframe) {
       console.error("No active iframe found");
       return;
     }
-    activeIframe.src = proxyUrl;
+    activeIframe.src = targetUrl;
     activeIframe.dataset.tabUrl = url;
     if (input) input.value = url;
   }
@@ -279,9 +247,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function openInNewTab(destination) {
-    const { uv } = getPaths();
-    const proxyUrl = destination.startsWith("/") || destination.startsWith(window.location.origin) ? destination : window.__encodeProxyUrl ? window.__encodeProxyUrl(destination) : `${uv}${__uv$config.encodeUrl(destination)}`;
-    sessionStorage.setItem("URL", proxyUrl);
+    const targetUrl = destination.startsWith("/") || destination.startsWith(window.location.origin) ? destination : window.__encodeNavUrl ? window.__encodeNavUrl(destination) : destination;
+    sessionStorage.setItem("URL", targetUrl);
     createNewTab();
   }
 
@@ -349,9 +316,8 @@ document.addEventListener("DOMContentLoaded", () => {
         tabTitle.textContent = title && title.length > 1 && title !== "Scramjet" && title !== "Home" ? title : "New Tab";
 
         newIframe.contentWindow.open = url => {
-          const { uv } = getPaths();
-          const proxyUrl = window.__encodeProxyUrl ? window.__encodeProxyUrl(url) : `${uv}${__uv$config.encodeUrl(url)}`;
-          sessionStorage.setItem("URL", proxyUrl);
+          const targetUrl = window.__encodeNavUrl ? window.__encodeNavUrl(url) : url;
+          sessionStorage.setItem("URL", targetUrl);
           createNewTab();
           return null;
         };
@@ -371,7 +337,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const doc = newIframe.contentDocument;
         doc.addEventListener("click", handleTopNavigation, true);
         doc.addEventListener("submit", handleTopNavigation, true);
-        if (window.injectExtensionsIntoFrame && (localStorage.getItem("proxy") ?? "sj") !== "eggs") {
+        if (window.injectExtensionsIntoFrame) {
           const href = newIframe.contentWindow.location.href;
           window.injectExtensionsIntoFrame(newIframe, href);
         }
@@ -399,8 +365,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const start = () => {
       newIframe.src = src;
     };
-    if (window.waitForProxyBoot && !isLocalAsset(src || "")) {
-      window.waitForProxyBoot().then(start);
+    if (window.waitForBoot && !isLocalAsset(src || "")) {
+      window.waitForBoot().then(start);
     } else {
       start();
     }

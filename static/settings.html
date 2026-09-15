@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="/assets/css/nav.css" />
   <link rel="stylesheet" href="/assets/css/settings.css" />
   <script src="/__runtime.js"></script>
+  <script src="/assets/js/storage.js"></script>
   <script src="/assets/js/runtime-client.js"></script>
   <script src="/assets/js/homoglyphs.js"></script>
   <script src="/assets/js/main.js"></script>
@@ -225,23 +226,18 @@
         <button class="key-button" id="engine-save-btn">Save</button>
       </div>
       <div class="settings-card">
-        <h3>Proxy</h3>
-        <p>Scramjet is the main one. Scrambled Eggs is a lighter beta. Ultraviolet is the old fallback.</p>
-        <select id="pChange">
-          <option value="sj">Scramjet (default)</option>
-          <option value="eggs">Scrambled Eggs (beta)</option>
-          <option value="uv">Ultraviolet</option>
-        </select>
+        <h3>Scramjet</h3>
+        <p>Connection settings for the built-in route.</p>
 
-        <div id="transport-row" style="display:none;">
+        <div id="transport-row">
           <label>Transport</label>
           <select id="transport-dropdown">
-            <option value="libcurl">Libcurl (default)</option>
-            <option value="epoxy">Epoxy</option>
+            <option value="standard">Standard (default)</option>
+            <option value="relay">Relay</option>
           </select>
 
-          <label>Wisp Server</label>
-          <input class="key-form" type="text" id="wisp-input" placeholder="Custom Wisp URL (blank = default)" />
+          <label>Tunnel server</label>
+          <input class="key-form" type="text" id="wisp-input" placeholder="Custom tunnel URL (blank = default)" />
           <button class="key-button" id="wisp-save-btn">Save</button>
         </div>
       </div>
@@ -262,8 +258,8 @@
         </label>
       </div>
       <div class="settings-card">
-        <h3>Proxy extensions</h3>
-        <p>Small scripts that run inside proxied pages. Turn on what you want. You can add your own.</p>
+        <h3>Page scripts</h3>
+        <p>Small scripts that run on loaded pages. Turn on what you want. You can add your own.</p>
         <div id="extension-list"></div>
         <input class="key-form" id="ext-name" placeholder="Name" />
         <input class="key-form" id="ext-site" placeholder="Match (youtube.com or *)" />

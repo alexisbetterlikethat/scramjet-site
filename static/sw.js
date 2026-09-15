@@ -7,9 +7,21 @@ const PATHS = {
   eggs: "/uv/eggs/",
 };
 
-const { ScramjetServiceWorker } = $scramjetLoadWorker();
-const sj = new ScramjetServiceWorker();
-let uv;
+function routeConfig() {
+  return self.__scramjet$config;
+}
+
+function loadWorker() {
+  const globals = routeConfig()?.globals;
+  const name = globals?.$scramjetLoadWorker ?? "$scramjetLoadWorker";
+  const fn = self[name];
+  if (typeof fn !== "function") throw new Error("Worker loader unavailable");
+  return fn();
+}
+
+const workerMod = loadWorker();
+const RouteWorker = Object.values(workerMod).find(value => typeof value === "function");
+const sj = new RouteWorker();
 
 self.addEventListener("install", event => {
   event.waitUntil(self.skipWaiting());
@@ -23,40 +35,18 @@ self.addEventListener("message", event => {
   if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
 });
 
-function ensureUltraviolet() {
-  if (uv) return;
-  importScripts("/assets/ultraviolet/uv.bundle.js");
-  importScripts("/assets/ultraviolet/uv.config.js");
-  importScripts(self.__uv$config.sw || "/assets/ultraviolet/uv.sw.js");
-  uv = new UVServiceWorker();
-}
-
-function isEggsRequest(url) {
-  return url.includes(PATHS.eggs);
-}
-
-function isLegacyUvRequest(url) {
-  const origin = `${location.origin}${PATHS.uv}`;
-  return url.startsWith(origin) && !url.includes(PATHS.scramjet) && !url.includes(PATHS.eggs);
-}
-
 self.addEventListener("fetch", event => {
   event.respondWith(
     (async () => {
       const url = event.request.url;
+      const eggs = url.includes(PATHS.eggs);
+      const cfg = routeConfig() ?? {};
       self.__scramjet$config = {
-        ...self.__scramjet$config,
-        prefix: isEggsRequest(url) ? PATHS.eggs : PATHS.scramjet,
+        ...cfg,
+        prefix: eggs ? PATHS.eggs : PATHS.scramjet,
       };
       await sj.loadConfig();
-
       if (await sj.route(event)) return await sj.fetch(event);
-
-      if (isLegacyUvRequest(url)) {
-        ensureUltraviolet();
-        return await uv.fetch(event);
-      }
-
       return await fetch(event.request);
     })(),
   );

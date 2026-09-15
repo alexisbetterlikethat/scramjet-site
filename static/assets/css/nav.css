@@ -54,33 +54,61 @@
 .nav-bar-right .navbar-link {
    display: inline-flex;
    align-items: center;
-   gap: 0.5em;
+   gap: 8px;
+   min-height: 38px;
+   padding: 0 14px;
+   border-radius: 999px;
    color: var(--text-muted);
    font-family: var(--font);
-   font-size: clamp(12px, 0.35vw + 12px, 15px);
+   font-size: 14px;
    font-weight: 500;
    letter-spacing: 0;
    line-height: 1;
    text-decoration: none;
    text-transform: none;
-   padding: 0.55em 0.95em;
-   border-radius: 999px;
-   transition: color var(--transition), background var(--transition);
+   transition:
+      color 0.22s var(--ease-spring),
+      background 0.22s var(--ease-spring),
+      transform 0.22s var(--ease-spring),
+      box-shadow 0.22s var(--ease-spring);
 }
 
-.nav-bar-right .navbar-link i {
+.navbar-link-icon {
    display: inline-flex;
    align-items: center;
    justify-content: center;
-   width: 1em;
-   height: 1em;
-   font-size: 1em;
-   line-height: 1;
-   opacity: 0.9;
+   width: 18px;
+   height: 18px;
+   flex: 0 0 18px;
 }
 
-.nav-bar-right .navbar-link span {
-   font-size: 1em;
+.navbar-link-icon i {
+   display: block;
+   width: 1.25em;
+   font-size: 14px;
+   line-height: 1;
+   text-align: center;
+}
+
+.navbar-link-icon .fa-gamepad {
+   font-size: 13px;
+}
+
+.navbar-link-icon .fa-table-cells {
+   font-size: 13px;
+}
+
+.navbar-link-icon .fa-wand-magic-sparkles {
+   font-size: 11px;
+}
+
+.navbar-link-icon .fa-gear {
+   font-size: 14px;
+}
+
+.navbar-link-label {
+   display: inline-block;
+   font-size: 14px;
    line-height: 1;
 }
 
@@ -88,6 +116,12 @@
 .nav-bar-right .navbar-link:hover {
    color: #000;
    background: #fff;
+   transform: translateY(-1px);
+   box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
+}
+
+.nav-bar-right .navbar-link:active {
+   transform: translateY(0) scale(0.98);
 }
 
 .navbar-icon {

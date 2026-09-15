@@ -78,27 +78,75 @@ function ensureVisionModel() {
   syncModelUi();
 }
 
+function katexApi() {
+  return window["katex"];
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function tidyTex(tex) {
+  let next = String(tex || "").trim();
+  next = next.replace(/\\{2,}([()[\]])/g, "\\$1");
+  next = next.replace(/\d{5,}/g, digits => (digits.includes(",") ? digits : digits.replace(/\B(?=(\d{3})+(?!\d))/g, "{,}")));
+  return next;
+}
+
+function looksLikeMath(text) {
+  return /\\(?:frac|sqrt|sum|int|times|cdot|left|right|begin|end|over|to|infty)|[_^]\{|[=\u00d7]\s*\d|^\s*\d+\s*\^\s*\d/.test(text);
+}
+
+function renderTex(tex, display) {
+  const api = katexApi();
+  const cleaned = tidyTex(tex);
+  if (!api) return escapeHtml(cleaned);
+  try {
+    return api.renderToString(cleaned, { displayMode: display, throwOnError: false, output: "html" });
+  } catch {
+    return escapeHtml(cleaned);
+  }
+}
+
+function mathToHtml(text) {
+  let source = String(text || "").replace(/\r\n/g, "\n");
+  source = source.replace(/\\{2,}([()[\]])/g, "\\$1");
+  const pattern = /\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\\\(([\s\S]+?)\\\)|\$([^$\n]+?)\$/g;
+  let html = "";
+  let last = 0;
+  let match;
+  while ((match = pattern.exec(source))) {
+    html += escapeHtml(source.slice(last, match.index));
+    if (match[1] != null) html += renderTex(match[1], true);
+    else if (match[2] != null) html += renderTex(match[2], true);
+    else if (match[3] != null) html += renderTex(match[3], false);
+    else html += renderTex(match[4], false);
+    last = match.index + match[0].length;
+  }
+  const rest = source.slice(last);
+  if (!last && looksLikeMath(source) && source.length < 400) return renderTex(source, true);
+  html += escapeHtml(rest);
+  return html;
+}
+
 function typesetMath(el) {
   const run = () => {
-    if (!el || typeof renderMathInElement !== "function") return;
-    renderMathInElement(el, {
-      delimiters: [
-        { left: "$$", right: "$$", display: true },
-        { left: "\\[", right: "\\]", display: true },
-        { left: "\\(", right: "\\)", display: false },
-        { left: "$", right: "$", display: false },
-      ],
-      throwOnError: false,
-      ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code"],
-    });
+    if (!el || el.classList.contains("y-think")) return;
+    const text = el.textContent;
+    if (!text || !katexApi()) return;
+    if (!/[\\$]|[_^]/.test(text) && !looksLikeMath(text)) return;
+    el.innerHTML = mathToHtml(text);
   };
-  if (typeof renderMathInElement === "function") {
+  if (katexApi()) {
     run();
     return;
   }
   const started = Date.now();
   const timer = setInterval(() => {
-    if (typeof renderMathInElement === "function") {
+    if (katexApi()) {
       clearInterval(timer);
       run();
     } else if (Date.now() - started > 8000) {
@@ -145,7 +193,13 @@ function addRow(role, text, image, thinking) {
   return { row, bubble, body };
 }
 
+function syncNewChat() {
+  const btn = document.getElementById("y-new");
+  if (btn) btn.hidden = !messages.length;
+}
+
 function renderThread() {
+  syncNewChat();
   if (!messages.length) {
     emptyState();
     return;
@@ -315,6 +369,7 @@ form.addEventListener("submit", async event => {
   saveMessages();
 
   addRow("user", prompt, image);
+  syncNewChat();
   input.value = "";
   input.style.height = "auto";
   setPendingImage("");
@@ -374,6 +429,7 @@ form.addEventListener("submit", async event => {
     typesetMath(reply.body);
     messages.push({ role: "assistant", content: full || "I could not get a reply." });
     saveMessages();
+    syncNewChat();
   } catch (error) {
     reply.body.className = "";
     reply.body.textContent = error.message || "Something went wrong.";
@@ -384,6 +440,11 @@ form.addEventListener("submit", async event => {
 });
 
 sendBtn.disabled = true;
+document.getElementById("y-new")?.addEventListener("click", () => {
+  messages = [];
+  saveMessages();
+  renderThread();
+});
 loadMessages();
 renderThread();
 

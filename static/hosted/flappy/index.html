@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flappy</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #0b0b0c; color: #fff; font-family: ui-sans-serif, system-ui, sans-serif; }
+    .wrap { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+    canvas { background: #141416; border: 1px solid #2a2a2e; border-radius: 12px; touch-action: none; }
+    p { margin: 0; color: #9a9a9a; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <canvas id="c" width="360" height="520"></canvas>
+    <p>Space / click / tap to flap. Score: <span id="s">0</span></p>
+  </div>
+  <script>
+    const canvas = document.getElementById("c");
+    const ctx = canvas.getContext("2d");
+    const scoreEl = document.getElementById("s");
+    const bird = { x: 80, y: 240, vy: 0, r: 12 };
+    const pipes = [];
+    let score = 0;
+    let dead = false;
+    let frame = 0;
+
+    function flap() {
+      if (dead) { score = 0; dead = false; pipes.length = 0; bird.y = 240; bird.vy = 0; frame = 0; }
+      bird.vy = -5.2;
+    }
+    window.addEventListener("keydown", e => { if (e.code === "Space") { e.preventDefault(); flap(); } });
+    canvas.addEventListener("pointerdown", flap);
+
+    function loop() {
+      frame += 1;
+      if (!dead) {
+        bird.vy += 0.28;
+        bird.y += bird.vy;
+        if (frame % 90 === 0) {
+          const gap = 120;
+          const top = 60 + Math.random() * 220;
+          pipes.push({ x: 360, top, gap, scored: false });
+        }
+        for (const p of pipes) {
+          p.x -= 2.4;
+          if (!p.scored && p.x + 40 < bird.x) { p.scored = true; score += 1; scoreEl.textContent = score; }
+          if (bird.x + bird.r > p.x && bird.x - bird.r < p.x + 40) {
+            if (bird.y - bird.r < p.top || bird.y + bird.r > p.top + p.gap) dead = true;
+          }
+        }
+        while (pipes[0] && pipes[0].x < -50) pipes.shift();
+        if (bird.y < 0 || bird.y > 520) dead = true;
+      }
+      ctx.fillStyle = "#141416";
+      ctx.fillRect(0, 0, 360, 520);
+      ctx.fillStyle = "#fff";
+      for (const p of pipes) {
+        ctx.fillRect(p.x, 0, 40, p.top);
+        ctx.fillRect(p.x, p.top + p.gap, 40, 520 - p.top - p.gap);
+      }
+      ctx.beginPath();
+      ctx.arc(bird.x, bird.y, bird.r, 0, Math.PI * 2);
+      ctx.fill();
+      if (dead) {
+        ctx.fillStyle = "#9a9a9a";
+        ctx.font = "18px sans-serif";
+        ctx.fillText("Game over — tap to retry", 70, 260);
+      }
+      requestAnimationFrame(loop);
+    }
+    loop();
+  </script>
+</body>
+</html>

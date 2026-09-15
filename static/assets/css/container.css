@@ -78,7 +78,11 @@
    border-radius: var(--radius-md);
    background: var(--surface-tile);
    cursor: pointer;
-   transition: transform var(--transition-slow), border-color var(--transition), box-shadow var(--transition);
+   will-change: transform, opacity;
+   transition:
+      transform 0.32s var(--ease-spring),
+      border-color var(--transition),
+      box-shadow 0.32s var(--ease-spring);
 }
 
 .column img,
@@ -113,9 +117,14 @@
 }
 
 .column:hover {
-   transform: translateY(-4px);
+   transform: translateY(-6px) scale(1.02);
    border-color: var(--border);
-   box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.column:active {
+   transform: translateY(-2px) scale(0.99);
+   transition-duration: 0.1s;
 }
 
 .column:hover img {
@@ -184,6 +193,8 @@
    justify-content: center;
    padding: 20px;
    background: rgba(0, 0, 0, 0.72);
+   backdrop-filter: blur(6px);
+   -webkit-backdrop-filter: blur(6px);
 }
 
 .site-modal-panel {
@@ -194,6 +205,7 @@
    border: 1px solid var(--border);
    border-radius: var(--radius-lg);
    background: var(--surface-card);
+   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
 }
 
 .site-modal-panel h3 {
@@ -246,6 +258,15 @@
    background: var(--surface-button);
    color: #fff;
    cursor: pointer;
+   transition: transform 0.18s var(--ease-spring), background var(--transition);
+}
+
+.site-modal-actions button:hover {
+   transform: translateY(-1px);
+}
+
+.site-modal-actions button:active {
+   transform: scale(0.97);
 }
 
 .site-modal-actions button[type="submit"] {

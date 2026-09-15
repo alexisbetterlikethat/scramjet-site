@@ -1,25 +1,25 @@
 function getEnabledExtensionIds() {
   try {
-    return JSON.parse(localStorage.getItem("proxy-extensions") || "[]");
+    return JSON.parse(localStorage.getItem(STORE.extEnabled) || "[]");
   } catch {
     return [];
   }
 }
 
 function setEnabledExtensionIds(ids) {
-  localStorage.setItem("proxy-extensions", JSON.stringify(ids));
+  localStorage.setItem(STORE.extEnabled, JSON.stringify(ids));
 }
 
 function getCustomExtensions() {
   try {
-    return JSON.parse(localStorage.getItem("proxy-extensions-custom") || "[]");
+    return JSON.parse(localStorage.getItem(STORE.extCustom) || "[]");
   } catch {
     return [];
   }
 }
 
 function setCustomExtensions(list) {
-  localStorage.setItem("proxy-extensions-custom", JSON.stringify(list));
+  localStorage.setItem(STORE.extCustom, JSON.stringify(list));
 }
 
 async function loadBuiltInExtensions() {
@@ -48,8 +48,8 @@ async function getActiveExtensions(url) {
 function injectExtensionsIntoFrame(iframe, url) {
   const doc = iframe?.contentDocument;
   if (!doc?.body) return;
-  const proxyPrefix = getPaths().uv;
-  if (!String(url || "").includes(proxyPrefix)) return;
+  const routeScope = getPaths().uv;
+  if (!String(url || "").includes(routeScope)) return;
   if (doc.documentElement.dataset.sjExt === "1") return;
   doc.documentElement.dataset.sjExt = "1";
   getActiveExtensions(url).then(list => {

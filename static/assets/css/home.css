@@ -6,14 +6,19 @@
 
 .title {
    margin: 0;
-   color: #fff;
    font-family: var(--font);
    font-size: clamp(44px, 8vw, 84px);
    font-weight: 600;
    line-height: 0.95;
    letter-spacing: -0.05em;
    text-align: center;
-   animation: rise 0.6s var(--ease-spring) both;
+   color: #fff;
+   background: linear-gradient(105deg, #fff 0%, #c8c8c8 42%, #fff 78%, #d8d8d8 100%);
+   background-size: 200% auto;
+   -webkit-background-clip: text;
+   background-clip: text;
+   -webkit-text-fill-color: transparent;
+   animation: rise 0.6s var(--ease-spring) both, shimmer 10s linear infinite;
 }
 
 .home-kicker {
@@ -80,12 +85,17 @@
    color: #000;
    font-size: 14px;
    font-weight: 600;
-   transition: transform var(--transition), background var(--transition);
+   transition: transform 0.2s var(--ease-spring), background var(--transition), box-shadow var(--transition);
 }
 
 .search-form button:hover {
    background: #e8e8e8;
-   transform: scale(1.02);
+   transform: scale(1.04);
+   box-shadow: 0 8px 24px rgba(255, 255, 255, 0.12);
+}
+
+.search-form button:active {
+   transform: scale(0.97);
 }
 
 .quick-apps {
@@ -110,14 +120,47 @@
    display: inline-flex;
    align-items: center;
    cursor: pointer;
+   transition:
+      transform 0.22s var(--ease-spring),
+      border-color var(--transition),
+      background var(--transition),
+      box-shadow var(--transition);
 }
 
 .quick-app:hover {
    border-color: var(--border-strong);
+   transform: translateY(-2px);
+   background: rgba(28, 28, 32, 0.95);
+   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
 }
 
-.home-engine {
-   display: none;
+.quick-app:active {
+   transform: translateY(0) scale(0.98);
+}
+
+.home-recents {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(540px, 100%);
+  margin-top: 18px;
+  animation: rise 0.85s var(--ease-spring) 0.18s both;
+}
+
+.home-recents[hidden] {
+  display: none !important;
+}
+
+.home-recents-label {
+  margin: 0 0 8px;
+  color: var(--text-faint);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-recents .quick-apps {
+  margin-top: 0;
 }
 
 @keyframes rise {
@@ -128,5 +171,14 @@
    to {
       opacity: 1;
       transform: translateY(0);
+   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+   .title {
+      animation: rise 0.6s var(--ease-spring) both;
+      background: none;
+      -webkit-text-fill-color: #fff;
+      color: #fff;
    }
 }

@@ -10,6 +10,26 @@ body.y-page {
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  position: relative;
+}
+
+.y-new {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  z-index: 2;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(18, 18, 20, 0.92);
+  color: var(--text-muted);
+  font: 500 13px var(--font);
+  cursor: pointer;
+}
+
+.y-new[hidden] {
+  display: none !important;
 }
 
 .y-thread {

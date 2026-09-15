@@ -16,8 +16,8 @@ const config = {
   // Drop games, apps, gh-games, and hosted routes from this host.
   disableGamesOnMainHost: false,
 
-  // Hide Ultraviolet in Settings and skip loading it in the service worker.
-  scramjetOnly: false,
+  // Hide legacy fallback engines in Settings and skip loading them in the service worker.
+  scramjetOnly: true,
 
   // Chat at /y reads process.env.AIKEY (OpenRouter). Never put the key in client JS.
 
@@ -36,6 +36,7 @@ const config = {
   pageRoutes: {
     games: "/g",
     apps: "/a",
+    viewer: "/v",
   },
 };
 

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pong</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #0b0b0c; color: #fff; font-family: ui-sans-serif, system-ui, sans-serif; }
+    .wrap { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+    canvas { background: #141416; border: 1px solid #2a2a2e; border-radius: 12px; }
+    p { margin: 0; color: #9a9a9a; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <canvas id="c" width="480" height="320"></canvas>
+    <p>W/S or arrows vs CPU. First to 7 wins.</p>
+  </div>
+  <script>
+    const canvas = document.getElementById("c");
+    const ctx = canvas.getContext("2d");
+    const ball = { x: 240, y: 160, vx: 4, vy: 2.5, r: 7 };
+    const paddle = { x: 12, y: 130, w: 10, h: 60 };
+    const cpu = { x: 458, y: 130, w: 10, h: 60 };
+    let pScore = 0, cScore = 0;
+
+    window.addEventListener("keydown", e => {
+      if (e.key === "w" || e.key === "ArrowUp") paddle.y = Math.max(0, paddle.y - 24);
+      if (e.key === "s" || e.key === "ArrowDown") paddle.y = Math.min(260, paddle.y + 24);
+    });
+
+    function resetBall(dir = 1) {
+      ball.x = 240; ball.y = 160;
+      ball.vx = 4 * dir; ball.vy = (Math.random() - 0.5) * 5;
+    }
+
+    function loop() {
+      ball.x += ball.vx; ball.y += ball.vy;
+      if (ball.y < ball.r || ball.y > 320 - ball.r) ball.vy *= -1;
+      const cy = ball.y - cpu.h / 2;
+      cpu.y += (cy - cpu.y) * 0.08;
+      cpu.y = Math.max(0, Math.min(260, cpu.y));
+
+      if (ball.x - ball.r < paddle.x + paddle.w && ball.y > paddle.y && ball.y < paddle.y + paddle.h) {
+        ball.vx = Math.abs(ball.vx);
+        ball.vy += (ball.y - (paddle.y + paddle.h / 2)) * 0.08;
+      }
+      if (ball.x + ball.r > cpu.x && ball.y > cpu.y && ball.y < cpu.y + cpu.h) {
+        ball.vx = -Math.abs(ball.vx);
+        ball.vy += (ball.y - (cpu.y + cpu.h / 2)) * 0.08;
+      }
+      if (ball.x < 0) { cScore += 1; resetBall(1); }
+      if (ball.x > 480) { pScore += 1; resetBall(-1); }
+
+      ctx.fillStyle = "#141416"; ctx.fillRect(0, 0, 480, 320);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
+      ctx.fillRect(cpu.x, cpu.y, cpu.w, cpu.h);
+      ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); ctx.fill();
+      ctx.font = "20px sans-serif";
+      ctx.fillText(`${pScore} : ${cScore}`, 220, 28);
+      requestAnimationFrame(loop);
+    }
+    loop();
+  </script>
+</body>
+</html>
