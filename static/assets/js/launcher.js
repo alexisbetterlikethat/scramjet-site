@@ -282,11 +282,31 @@ function makeCoverFallback(name = "") {
   return fallback;
 }
 
+function extraGameTags(name = "") {
+  const n = name.toLowerCase();
+  const tags = [];
+  if (/\b(2\s*player|two player|multiplayer|1v1|2v2|versus|\bvs\b|co-op|coop)\b/.test(n)) tags.push("2P");
+  if (/(basket|soccer|football|baseball|tennis|golf|hockey|nfl|nba|fifa|bowl|boxing|mma|volley|cricket|sport)/.test(n)) tags.push("sports");
+  if (/(race|racing|drift|moto|kart|drive|highway|traffic|car )/.test(n)) tags.push("racing");
+  if (/(puzzle|2048|sudoku|match|block|tetris|wordle|solitaire|mahjong)/.test(n)) tags.push("puzzle");
+  if (/\bio\b|agar|slither|hole\.io|paper\.io/.test(n)) tags.push("io");
+  if (/(shoot|fps|gun|sniper|war |combat|battle|krunker|shell shock)/.test(n)) tags.push("shooter");
+  if (/(idle|clicker|incremental)/.test(n)) tags.push("idle");
+  if (/(platform|jump|vex|geometry dash|run 3|mario)/.test(n)) tags.push("platform");
+  if (/(horror|scary|fnaf|granny|slender)/.test(n)) tags.push("horror");
+  if (/(arcade|retro|pinball|pac-?man|\bsnake\b|breakout)/.test(n)) tags.push("arcade");
+  return tags;
+}
+
 function renderAppCard(app, appIndex, isCustom = false) {
   const columnDiv = document.createElement("div");
   columnDiv.classList.add("column");
 
-  const categories = isCustom ? "all" : (app.categories || []).join(" ");
+  const categories = isCustom
+    ? "all"
+    : [...new Set([...(app.categories || []).map(cat => String(cat).replace(/,/g, "").trim()), ...(isGamesPage ? extraGameTags(app.name) : [])])]
+        .filter(Boolean)
+        .join(" ");
   columnDiv.setAttribute("data-category", categories);
   columnDiv.setAttribute("data-app-index", appIndex);
 
@@ -473,7 +493,10 @@ function applyFilters() {
     const categories = card.getAttribute("data-category").split(" ");
 
     const matchesSearch = !searchTerm || appName.includes(searchTerm);
-    const matchesCategory = selectedCategories.length === 0 || selectedCategories.some(cat => categories.includes(cat));
+    const matchesCategory =
+      selectedCategories.length === 0 ||
+      selectedCategories.includes("all") ||
+      selectedCategories.some(cat => categories.includes(cat));
 
     card.style.display = matchesSearch && matchesCategory ? "block" : "none";
   });

@@ -13,11 +13,13 @@ const pickerMenu = document.getElementById("y-picker-menu");
 const attachWrap = document.getElementById("y-attach-wrap");
 const imageInput = document.getElementById("y-image");
 const imageName = document.getElementById("y-image-name");
+const preview = document.getElementById("y-preview");
 
 let models = [];
 let modelId = "";
 let messages = [];
 let pending = false;
+let pendingImage = "";
 
 function loadMessages() {
   try {
@@ -45,7 +47,35 @@ function currentModel() {
 }
 
 function imageLabel(images) {
-  return images ? "Images" : "Text";
+  return images ? "Text + images" : "Text";
+}
+
+function updateSend() {
+  sendBtn.disabled = pending || (!input.value.trim() && !pendingImage);
+}
+
+function setPendingImage(dataUrl) {
+  pendingImage = dataUrl || "";
+  if (pendingImage) {
+    preview.src = pendingImage;
+    preview.hidden = false;
+    imageName.textContent = "Ready";
+  } else {
+    preview.removeAttribute("src");
+    preview.hidden = true;
+    imageName.textContent = "Image";
+    imageInput.value = "";
+  }
+  updateSend();
+}
+
+function ensureVisionModel() {
+  if (currentModel()?.images) return;
+  const vision = models.find(model => model.best && model.images) || models.find(model => model.images);
+  if (!vision) return;
+  modelId = vision.id;
+  localStorage.setItem(MODEL_KEY, modelId);
+  syncModelUi();
 }
 
 function emptyState() {
@@ -108,38 +138,52 @@ function syncModelUi() {
   pickerName.textContent = model.name;
   pickerMeta.textContent = imageLabel(model.images);
   attachWrap.hidden = !model.images;
-  if (!model.images) {
-    imageInput.value = "";
-    imageName.textContent = "Image";
-  }
+  if (!model.images) setPendingImage("");
   pickerMenu.querySelectorAll(".y-opt").forEach(btn => {
     btn.classList.toggle("y-opt-on", btn.dataset.id === model.id);
   });
 }
 
+function addModelButton(model) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "y-opt";
+  btn.dataset.id = model.id;
+  const name = document.createElement("span");
+  name.textContent = model.name;
+  const tag = document.createElement("span");
+  tag.className = "y-opt-tag";
+  tag.innerHTML = model.images
+    ? `<i class="fa-regular fa-image"></i> Text + images`
+    : `<i class="fa-solid fa-align-left"></i> Text`;
+  btn.append(name, tag);
+  btn.addEventListener("click", () => {
+    modelId = model.id;
+    localStorage.setItem(MODEL_KEY, modelId);
+    picker.classList.remove("y-open");
+    pickerMenu.hidden = true;
+    syncModelUi();
+  });
+  pickerMenu.appendChild(btn);
+}
+
 function renderPicker() {
   pickerMenu.replaceChildren();
-  for (const model of models) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "y-opt";
-    btn.dataset.id = model.id;
-    const name = document.createElement("span");
-    name.textContent = model.name;
-    const tag = document.createElement("span");
-    tag.className = "y-opt-tag";
-    tag.innerHTML = model.images
-      ? `<i class="fa-regular fa-image"></i> Images`
-      : `<i class="fa-solid fa-align-left"></i> Text`;
-    btn.append(name, tag);
-    btn.addEventListener("click", () => {
-      modelId = model.id;
-      localStorage.setItem(MODEL_KEY, modelId);
-      picker.classList.remove("y-open");
-      pickerMenu.hidden = true;
-      syncModelUi();
-    });
-    pickerMenu.appendChild(btn);
+  const best = models.filter(model => model.best);
+  const rest = models.filter(model => !model.best);
+  if (best.length) {
+    const heading = document.createElement("p");
+    heading.className = "y-group";
+    heading.textContent = "Best";
+    pickerMenu.appendChild(heading);
+    best.forEach(addModelButton);
+  }
+  if (rest.length) {
+    const heading = document.createElement("p");
+    heading.className = "y-group";
+    heading.textContent = "More";
+    pickerMenu.appendChild(heading);
+    rest.forEach(addModelButton);
   }
   syncModelUi();
 }
@@ -174,14 +218,42 @@ document.addEventListener("click", () => {
   picker.classList.remove("y-open");
 });
 
-imageInput.addEventListener("change", () => {
-  imageName.textContent = imageInput.files[0]?.name || "Image";
+imageInput.addEventListener("change", async () => {
+  const file = imageInput.files[0];
+  if (!file) return;
+  ensureVisionModel();
+  setPendingImage(await fileToDataUrl(file));
 });
 
 input.addEventListener("input", () => {
   input.style.height = "auto";
   input.style.height = `${Math.min(input.scrollHeight, 180)}px`;
-  sendBtn.disabled = !input.value.trim() || pending;
+  updateSend();
+});
+
+async function takePastedImage(event) {
+  const file = [...(event.clipboardData?.items || [])]
+    .map(item => (item.type.startsWith("image/") ? item.getAsFile() : null))
+    .find(Boolean);
+  if (!file) return;
+  event.preventDefault();
+  ensureVisionModel();
+  setPendingImage(await fileToDataUrl(file));
+}
+
+input.addEventListener("paste", takePastedImage);
+form.addEventListener("paste", takePastedImage);
+
+form.addEventListener("dragover", event => {
+  event.preventDefault();
+});
+
+form.addEventListener("drop", async event => {
+  event.preventDefault();
+  const file = [...(event.dataTransfer?.files || [])].find(item => item.type.startsWith("image/"));
+  if (!file) return;
+  ensureVisionModel();
+  setPendingImage(await fileToDataUrl(file));
 });
 
 input.addEventListener("keydown", event => {
@@ -195,28 +267,27 @@ form.addEventListener("submit", async event => {
   event.preventDefault();
   if (pending) return;
   const text = input.value.trim();
-  if (!text) return;
-
   const model = currentModel();
-  let image;
-  if (model?.images && imageInput.files[0]) image = await fileToDataUrl(imageInput.files[0]);
+  const image = model?.images ? pendingImage : "";
+  if (!text && !image) return;
+
+  const prompt = text || "Look at this image and explain it.";
 
   messages.push({
     role: "user",
     content: image
       ? [
-          { type: "text", text },
+          { type: "text", text: prompt },
           { type: "image_url", image_url: { url: image } },
         ]
-      : text,
+      : prompt,
   });
   saveMessages();
 
-  addRow("user", text, image);
+  addRow("user", prompt, image);
   input.value = "";
   input.style.height = "auto";
-  imageInput.value = "";
-  imageName.textContent = "Image";
+  setPendingImage("");
   sendBtn.disabled = true;
 
   const reply = addRow("assistant", "", "", true);
@@ -277,7 +348,7 @@ form.addEventListener("submit", async event => {
     reply.body.textContent = error.message || "Something went wrong.";
   } finally {
     pending = false;
-    sendBtn.disabled = !input.value.trim();
+    updateSend();
   }
 });
 

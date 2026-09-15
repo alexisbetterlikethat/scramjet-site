@@ -994,10 +994,11 @@
   },
   {
     "name": "Slope",
-    "link": "https://watchdocumentaries.com/wp-content/uploads/games/slope/",
+    "link": "https://slope.lol/games/slope/index.html",
     "image": "/assets/media/icons/slope.webp",
     "categories": [
-      "all"
+      "all",
+      "arcade"
     ]
   },
   {
@@ -4512,12 +4513,11 @@
   },
   {
     "name": "Slope (GN)",
-    "link": "/gn-html/198.html",
+    "link": "https://slope.lol/games/slope/index.html",
     "image": "/gn-cover/198.png",
     "categories": [
       "all",
-      "local",
-      "gn-math"
+      "arcade"
     ]
   },
   {
@@ -6182,12 +6182,11 @@
   },
   {
     "name": "Slope 2",
-    "link": "/gn-html/368.html",
+    "link": "https://lnahtml.github.io/a6/slope-2/",
     "image": "/gn-cover/368.png",
     "categories": [
       "all",
-      "local",
-      "gn-math"
+      "arcade"
     ]
   },
   {

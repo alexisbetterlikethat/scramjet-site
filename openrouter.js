@@ -30,6 +30,17 @@ function supportsImages(model) {
   return /\+?\s*image/i.test(String(arch.modality || "")) && /->\s*text/i.test(String(arch.modality || ""));
 }
 
+const BEST_IDS = new Set([
+  "openrouter/free",
+  "google/gemma-4-31b-it:free",
+  "google/gemma-4-26b-a4b-it:free",
+  "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "nex-agi/nex-n2.5-pro:free",
+  "thinkingmachines/inkling:free",
+  "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+]);
+
 function displayName(model) {
   if (model.id === "openrouter/free") return "Auto";
   const name = String(model.name || model.id || "Model")
@@ -45,6 +56,7 @@ export function publicModel(model) {
     id: model.id,
     name: displayName(model),
     images: supportsImages(model),
+    best: BEST_IDS.has(model.id) || model.id === "openrouter/free",
   };
 }
 
@@ -65,6 +77,7 @@ export async function listChatModels() {
     .sort((a, b) => {
       if (a.id === "openrouter/free") return -1;
       if (b.id === "openrouter/free") return 1;
+      if (a.best !== b.best) return a.best ? -1 : 1;
       return a.name.localeCompare(b.name);
     });
   cache = { at: Date.now(), models };
@@ -74,6 +87,8 @@ export async function listChatModels() {
 export const SYSTEM_PROMPT = `You are a careful tutor and general-knowledge assistant for students.
 
 Help with homework by explaining the idea in plain language, showing the steps, and checking the answer. For everyday questions, answer clearly first, then add a short extra only if it helps.
+
+If the user sends an image, read it carefully (text, diagrams, worksheets, screenshots) and answer the question about it. Combine the image with their text.
 
 Keep a calm, respectful tone. Do not use vulgar, sexual, or abusive language, and do not repeat it if the user uses it. If they swear or ask for sexual content, refuse that part and offer to continue on the actual school or general question.
 
