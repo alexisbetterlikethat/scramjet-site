@@ -8,6 +8,8 @@ pnpm build
 pnpm start
 ```
 
+Railway and Docker builds run `pnpm build` automatically (`railway.toml`, `nixpacks.toml`, `Dockerfile`). The server exits on start if `dist/.runtime/vendor-map.cjs` is missing and `requireBuild` is enabled in `config.js`.
+
 ## What the build changes
 
 Each `pnpm build` generates a fresh `dist/` with:
